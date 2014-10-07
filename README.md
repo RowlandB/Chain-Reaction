@@ -1,7 +1,6 @@
-Chain-Reaction
-
+<h1>Chain-Reaction</h1>
 Author- Rowland Brown
-Contributors-
+
 ==============
 Purpose:
 To create an RPG that allows for dynamic NPCs. Ie, NPCs that will act without being 'watched' or directly interacted with.
