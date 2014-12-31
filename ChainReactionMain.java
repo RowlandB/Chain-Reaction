@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Vector;
 import java.util.Scanner;
@@ -7,11 +8,10 @@ public class Main
 	static Vector<Location> places = new Vector<Location>(0);
 	static Vector<Person> NPCs = new Vector<Person> (0);
 	
+	
 	public static void main(String [ ] args)
-	{
-
-		/////Locations
-		
+	{	
+		/////Locations	
 		Location SL = new Start_Location();
 		Location Blacksmith = new Forge("Blacksmith's");
 		Location Bobs_Fields = new Field("Bob's Field");
@@ -22,25 +22,25 @@ public class Main
 		
 		
 		/////Player
-		Player_Character Bob = new Player_Character(SL);
+		Player_Character The_Player = new Player_Character(SL);
 		
 
 		
 		////Persons
-		Person Generic_Peasant = new Commoner(Bobs_Fields);
-		Bobs_Fields.AddPerson(Generic_Peasant);
-		NPCs.add(Generic_Peasant);
+//		Person Generic_Peasant = new Commoner(Bobs_Fields);
+//		Bobs_Fields.AddPerson(Generic_Peasant);
+//		NPCs.add(Generic_Peasant);
 		
-		Person Generic_Noble = new Noble(Keshies_Castle);
-		Keshies_Castle.AddPerson(Generic_Noble);
-		NPCs.add(Generic_Noble);
+//		Person Generic_Noble = new Noble(Keshies_Castle);
+//		Keshies_Castle.AddPerson(Generic_Noble);
+//		NPCs.add(Generic_Noble);
 		
 		
 		//TODO: initialize all the NPCs
 		
 		while(true)
 		{
-			Bob.InteractWithEnvironment();
+			The_Player.InteractWithEnvironment();
 			for(int x = 0; x < NPCs.size(); x++)
 				NPCs.get(x).Act();
 		}
@@ -67,12 +67,14 @@ class Player_Character
 		//use item in inventory
 		
 		
-		this.here = Start;	
+		this.here = Start;
+		this.current_hp = 100;
+		this.total_hp = 100;
 	}
 	
 	
 	
-	
+	//displays at all the actions the player can do
 	public void InteractWithEnvironment()
 	{
 		int num_player_actions = what_do.size();
@@ -92,22 +94,15 @@ class Player_Character
 			IO.Output_String(output);
 		}
 		
-		String player_choice = IO.Input_String();
+		int answer = helpers.which_one(num_player_actions + other_options.size());
 		
-		int answer = Integer.parseInt(player_choice);
-		
-		if(answer < 1 || answer > (num_player_actions + other_options.size()))
+		if(answer < num_player_actions)
 		{
-			IO.Output_String("Did you mis-type?");
-		}
-		
-		if(answer <= num_player_actions)
-		{
-			this.what_do.get(answer-1).What_Happens();
+			Action_Flag_Test(this.what_do.get(answer));
 		}
 		else
 		{
-			here.Get_Actions().get(answer-1-num_player_actions).What_Happens();
+			Action_Flag_Test(here.Get_Actions().get(answer-num_player_actions));
 		}
 		
 	}
@@ -160,22 +155,82 @@ class Player_Character
 				IO.Output_String(output);
 			}
 			
-			String input = IO.Input_String();
+			int answer = helpers.which_one(Main.places.size());
 			
-			int answer = Integer.parseInt(input);
+			Move_Character(Main.places.get(answer));
 			
-			if(answer < 1 || answer > Main.places.size())
+		}
+	}
+	
+	class Chat extends Action
+	{
+		Chat()
+		{
+			description = "talk to someone near you";
+		}
+		
+		public void What_Happens()
+		{
+			String people;
+			LinkedList<Person> everyone =  here.GetEveryone();
+			if(everyone.size() == 0)
 			{
-				IO.Output_String("Did you mis-type?");
+				people = "There's no one to talk to! (unless you want to talk to yourself)";
+				IO.Output_String(people);
 			}
 			else
 			{
-				Move_Character(Main.places.get(answer-1));
+				IO.Output_String("With whom would you like to speak ?");
+				for(int x = 0; x <everyone.size(); x++)
+				{
+					int y = x +1;
+					String output = Integer.toString(y) + ") " + everyone.get(x).Get_Name();
+					IO.Output_String(output);
+				}
+				int whom = Integer.parseInt(IO.Input_String());
+				
+				everyone.get(whom-1).Chat_with_PC();
 			}
-			
-			
+		}
+	}
+	
+	class DoNothing extends Action
+	{
+		DoNothing()
+		{
+			description = "wait for things to happen";
 		}
 		
+		public void What_Happens()
+		{}
+	}
+	
+	
+	//////
+	
+	
+	//tests all the possible things that might stop the player from doing what he wants
+	//if he can't do what he wants, ask for another action. Nothing will have changed in the meantime, so it should be the same list as before
+	private void Action_Flag_Test(Action potential)
+	{
+		if(potential.is_strenuous)
+		{
+			if(Player_is_Weak(potential))
+			{
+				IO.Output_String("It looks like you're too weak to " + potential.description);
+				this.InteractWithEnvironment();
+			}
+		}
+		else
+		{
+			potential.What_Happens();
+		}
+		
+	}
+	
+	private boolean Player_is_Weak(Action stren)
+	{
+		return (current_hp < total_hp/2);
 	}
 	
 	private void Move_Character(Location where_to)
@@ -183,21 +238,102 @@ class Player_Character
 		here = where_to;
 	}
 	
+//////////////////////////////////////
+	class inventory
+	{
+		inventory() //TODO: finish Inventory and Item. Also the implementation of them.
+		{
+			the_items = new ArrayList(0);
+			total_weight = 0;
+			IO = new System_IO_Object();
+		}
+		
+		public void Display_Inventory()
+		{
+			for(int x=0; x < the_items.size(); x++)
+			{
+				the_items.get(x).Display();
+			}
+			
+			IO.Output_String("Total Weight: " + total_weight);
+		}
+		
+		public void add_item(item_helper to_be_added)
+		{
+			the_items.add(to_be_added);
+			total_weight += to_be_added.get_weight();
+		}
+		
+		public void remove_1_item(int which)
+		{
+			
+			
+		}
+		
+		public void remove_all_of_item(int which)
+		{
+			total_weight -= the_items.get(which).get_weight();
+			the_items.remove(which);		
+		}
+		
+		private equippable_item empty_slot;
+		private IO_Object IO;
+		private int total_weight;
+		private ArrayList<item_helper> the_items;
+	}
+
+	
+	
+//////////////////////////////////////	
+	
+	private inventory my_inventory;
 	private IO_Object IO;
 	private Vector<Action> what_do;
 	private Location here;
+	private int total_hp;
+	private int current_hp;
 }
 
 ///////////////////////////////
 class Fact
 {
-		
-		
+	Fact(String descr, String hf)
+	{
+		basic_description = descr;
+		hard_facts = hf;
+		IO = new System_IO_Object();
+		my_id = unique_id;
+		unique_id++;
+	}
 	
+	public String Get_Description()
+	{
+		return basic_description;
+	}
 	
+	public String Get_Fact()
+	{
+		return hard_facts;
+	}
 	
+	public int Get_id()
+	{
+		return my_id;
+	}
+
+	public void display_fact()
+	{
+		IO.Output_String(basic_description);
+		IO.Output_String(hard_facts);
+		IO.Output_String(Integer.toString(my_id));
+	}
 	
+	private String basic_description;
+	private String hard_facts;
+	private  IO_Object IO;
+	private int my_id;
 	
+	private static int unique_id = 1;
 }
 
 ///////////////////////////////
@@ -206,13 +342,14 @@ abstract class Action
 	Action()
 	{
 		IO = new System_IO_Object();
+		is_strenuous = false;
 	}
 	
 	public void What_Happens(){}
 	public String description;
 	IO_Object IO;
+	public boolean is_strenuous;
 }
-
 
 
 
@@ -265,10 +402,59 @@ abstract class  Person
 		}
 	}
 	
+	public void Chat_with_PC()
+	{
+		Chat_Greeting();
+		
+		boolean stay = true;
+		while(stay)
+		for(int x = 0; x < knowledge_base.size(); x++)
+		{
+			int y = x +1;
+			String output = Integer.toString(y) + ") " + knowledge_base.get(x).Get_Description();
+			IO.Output_String(output);
+		}
+	
+		int answer = helpers.which_one(knowledge_base.size());
+		
+		//TODO maybe do something depending on how character feels about him
+		
+	}
+	
+	private void Chat_Greeting()
+	{
+		if(pc_friendlyness_level == 0)
+		{
+			IO.Output_String("Hello, Stranger.");	
+		}
+		else if(pc_friendlyness_level < -10)
+		{
+			IO.Output_String("You've got some never, showing your face around here.");	
+		}
+		else if(pc_friendlyness_level > 10)
+		{
+			IO.Output_String("Hello, my good friend.");	
+		}
+		else if(pc_friendlyness_level > 0)
+		{
+			IO.Output_String("Hello, friend.");
+		}
+		else if(pc_friendlyness_level < 0)
+		{
+			IO.Output_String("[disgruntaled silence].");	
+		}
+		Personal_Greeting();
+	}
+	
+	private void Personal_Greeting()
+	{
+		IO.Output_String("I know a few things...");
+	}
 	
 	public void GainInformation(Fact knowledge)
 	{
-		knowledge_base.add(knowledge);	
+		if(!fact_already_known(knowledge))
+			knowledge_base.add(knowledge);	
 	}
 
 	//Default Action used by Main
@@ -300,6 +486,17 @@ abstract class  Person
 		}
 	}
 	
+	private boolean fact_already_known(Fact new_info)
+	{
+		int the_id = new_info.Get_id();
+		for(int x = 0; x < knowledge_base.size(); x++)
+		{
+			if(knowledge_base.get(x).Get_id() == the_id)
+				return true;
+		}
+		return false;
+	}
+	
 	/////////////////////////////
 	protected enum Mood
 	{
@@ -307,6 +504,7 @@ abstract class  Person
 	}
 	
 	protected Mood mood;
+	protected int pc_friendlyness_level; //0 = neutral, bigger is friendlier
 	protected Vector<Fact> knowledge_base;
 	protected  int fight_power;
 	protected String name;
@@ -314,13 +512,12 @@ abstract class  Person
 	protected IO_Object IO;
 }
 
-class Commoner extends Person
+abstract class Commoner extends Person
 {
-	Commoner(Location Start)
+	Commoner(Location Start, String their_name)
 	{
+		name = their_name;
 		mood = Mood.angry;
-		place = Start;
-		name = "Bob, the Blacksmith";	
 	}
 	
 	public void Act()
@@ -330,12 +527,12 @@ class Commoner extends Person
 
 }
 
-class Noble extends Person
+abstract class Noble extends Person
 {
-	Noble(Location Start)
+	Noble(Location Start, String their_name)
 	{
-		place = Start;
-		name = "The High Lord Kesh of NoFunington";
+		name = their_name;
+		mood =Mood. ambivalent;
 	}
 	
 	public void Act()
@@ -451,8 +648,114 @@ class Castle extends Location
 
 }
 
+///////////////////////////////
+
+class item_helper
+{
+	public int get_weight()
+	{
+		return how_many*the_actual_item.get_weight();
+	}
+	
+	public void Display()
+	{
+		the_actual_item.Display();
+		IO.Output_String("Number: " + how_many);
+	}
+	
+	private int how_many;
+	private item the_actual_item;
+	private IO_Object IO;
+}
+
+//TODO: finish item
+class item
+{
+	item()
+	{
+		
+		
+	}
+	
+	public void Display()
+	{
+		IO.Output_String("Name: " +name);
+		IO.Output_String(description);
+		IO.Output_String("Weight: " + weight + " Value: " + value + weight/value);
+		IO.Output_String("Stolen: " + stolen);
+	}
+	
+	public int get_weight()
+	{
+		return weight;
+	}
+	
+	public boolean get_equipped()
+	{
+		return is_equipped;
+	}
+	
+	
+	private String name;
+	private String description;
+	private boolean is_equipped;
+	private int weight;
+	private int value;
+	private boolean stolen;
+	protected IO_Object IO;
+}
+
+//TODO: finish readable_item
+class readable_item extends item
+{
+	
+	
+	private boolean read;
+}
+
+//TODO: finish equippable_item
+class equippable_item extends item
+{
+	public void Display()
+	{
+		super.Display();
+		IO.Output_String(slot.toString()); //I really hope this works
+	}
+	
+	private void on_equip()
+	{
+		
+		
+	}
+	
+	private void on_unequip()
+	{
+		
+		
+	}
+	
+	protected enum equip_region
+	{
+		head, body, ring, amulet, one_handed, two_handed
+	}
+	
+	private equip_region slot;
+}
+
+//TODO: finish consumable_item
+class consumable_item extends item
+{
+	
+	
+	void on_use()
+	{
+		
+	}
+}
+
 
 //////////////////////////////
+//Exactly what it says on the tin: handles input and output
 abstract class IO_Object
 {
 	public String Input_String(){
@@ -463,7 +766,7 @@ abstract class IO_Object
 	
 }
 
-
+//uses System IO
 class System_IO_Object extends IO_Object
 {
 	System_IO_Object(){}
@@ -480,4 +783,29 @@ class System_IO_Object extends IO_Object
 		System.out.println(output);
 	}
 }
+
+//////////////////////////////
+abstract class helpers
+{
+	//Assumption: We've already output a question with 'size' number of choices
+	//Yells at the player until they give a viable option (one from the list)
+	static int which_one(int size)
+	{
+		IO_Object IO = new System_IO_Object();
+	
+		int x = Integer.parseInt(IO.Input_String());
+	
+		while(x > size || x < 1)
+		{
+			IO.Output_String("That's not a selectable option. Try again");
+			x = Integer.parseInt(IO.Input_String());
+		}
+	
+		return x - 1;
+	}
+}
+
+
+
+
 
