@@ -56,6 +56,7 @@ class Player_Character
 	{
 		this.my_inventory = new Inventory();
 
+		my_inventory.add_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
 		
 		this.what_do = new Vector<Action>(0);
 
@@ -64,6 +65,7 @@ class Player_Character
 		what_do.add(new Chat());
 		what_do.add(new DoNothing());
 		what_do.add(new CheckInventory());
+		what_do.add(new UseItem());
 		
 		//TODO: initilize each Action
 		
@@ -201,11 +203,6 @@ class Player_Character
 				helpers.finish_output();
 				
 				int whom = helpers.which_one(everyone.size());
-				
-//				int whom = Integer.parseInt(helpers.input());
-//				
-//				//TODO check if this is just the WHICH function
-//				
 				everyone.get(whom).Chat_with_PC();
 			}
 		}
@@ -245,7 +242,34 @@ class Player_Character
 		public void What_Happens()
 		{
 			helpers.output("Which item would you like to use?");
-			item useable_item = my_inventory.Select_Item();
+			
+			if(!my_inventory.isEmpty())
+			{
+				item useable_item = my_inventory.Select_Item();
+				
+				
+				/*TODO: Much better way of doing this is to create a 'USE' Action for all items, and call it. 'USE' should then tell us
+				if we need to do something*/
+				if(useable_item.getClass().getSuperclass().getName().equals("consumable_item"))
+				{
+					((consumable_item)useable_item).ability.What_Happens();
+					my_inventory.remove_item(useable_item,1);
+				}
+				else if(useable_item.getClass().getName().equals("readable_item"))
+				{
+					((readable_item)useable_item).Read();
+				}
+				else
+				{
+					helpers.output("You can't use that!");
+				}
+			}
+			else
+			{
+				helpers.output("You have nothing. Dang, you're poor");
+			}
+			
+			
 			
 		}
 		
@@ -300,20 +324,27 @@ class Player_Character
 			total_weight = 0;
 		}
 		
-		public item Select_Item()
+		public boolean isEmpty()
 		{
 			if(the_items.size()==0)
 			{
-				helpers.output("You have nothing. Dang, you're poor");
+				return true;
 			}
 			else
 			{
-				for(int x=0; x < the_items.size(); x++)
-				{
-					helpers.output(Integer.toString(x) + " " + the_items.get(x).get_name());
-				}
+				return false;
 			}
+		}
+		
+		private item Select_Item()
+		{
+			for(int x=1; x <= the_items.size(); x++)
+			{
+				helpers.output(Integer.toString(x) + ") " + the_items.get(x-1).get_name());
+			}
+		
 			helpers.finish_output();
+
 			int which_one = helpers.which_one(the_items.size());
 			
 			return the_items.get(which_one);
@@ -344,19 +375,38 @@ class Player_Character
 		
 		public void remove_item(int which, int how_many)
 		{
-			if(the_items.get(which).check_quantity(how_many))
+			if(the_items.get(which).have_x_or_more(how_many))
 			{
-				remove_all_of_item(which);
+				remove_some_of_item(which, how_many);
+				
 			}
 			else
 			{
-				remove_some_of_item(which, how_many);
+				remove_all_of_item(which);
 			}
-			
+		}
+		
+		/**
+		 * note that this simply calls the overloaded int,int version. Call that if possible
+		 * 
+		 * @param which
+		 * @param how_many
+		 */
+		public void remove_item(item which, int how_many)
+		{
+			for(int x=0; x<the_items.size(); x++)
+			{
+				if(the_items.get(x).equals(which))
+				{
+					remove_item(x,how_many);
+					break;
+				}
+			}
 		}
 		
 		private void remove_some_of_item(int which, int how_many)
 		{
+			how_many = how_many*(-1);
 			total_weight -= the_items.get(which).get_weight();
 			the_items.get(which).change_quantity(how_many);
 		}
@@ -606,7 +656,7 @@ class item
 	public void Display()
 	{
 		helpers.output("Name: " +name);
-		helpers.output(description);
+		helpers.output(rules_description);
 		helpers.output("Weight: " + weight + " Value: " + value + weight/value);
 		helpers.output("Stolen: " + stolen);
 		helpers.output("Count: " + quantity);
@@ -638,7 +688,7 @@ class item
 		return quantity;
 	}
 	
-	public boolean check_quantity(int check_number)
+	public boolean have_x_or_more(int check_number)
 	{
 		return (check_number <= this.quantity);
 	}
@@ -659,7 +709,8 @@ class item
 	}
 	
 	protected String name;
-	protected String description;
+	protected String rules_description;
+	protected String flavor_text;
 	private boolean is_equipped;
 	protected int weight;
 	protected int value;
@@ -668,14 +719,25 @@ class item
 	protected int quantity;
 }
 
-//TODO: finish readable_item
+
 class readable_item extends item
 {
+	readable_item(String base_name, String base_text)
+	{
+		name = base_name;
+		weight = 0;
+		value = 0;
+		stolen = false;
+		read = false;
+		
+		text = base_text;
+	}
 	
 	public void Display()
 	{
 		helpers.output("Name: " + name);
-		helpers.output(description);
+		helpers.output(rules_description);
+		helpers.output(flavor_text);
 		helpers.output("Weight: " + weight + " Value: " + value + weight/value);
 		helpers.output("Stolen: " + stolen);
 		helpers.output("Count: " + quantity);
@@ -725,36 +787,44 @@ class equippable_item extends item
 	private equip_region slot;
 }
 
-////TODO: finish consumable_item
-//interface consumable_item
-//{
-//	class on_use extends Action{};
-//	
-//	on_use ability = new on_use();
-//}
-//
-//class health_potion extends item implements consumable_item
-//{
-//	health_potion()
-//	{
-//		ability = new Gain_HP_hp_pot();
-//		
-//	}
-//	
-//	class Gain_HP_hp_pot extends on_use
-//	{
-//		Gain_HP_hp_pot()
-//		{
-//			description = "Drink a Potion to restore health";
-//		}
-//		
-//		public void What_Happens()
-//		{
-//			helpers.PC.gain_health(5);
-//		}
-//	}
-//
-//}
+
+abstract class consumable_item extends item
+{
+	
+	protected Action ability;
+}
+
+class health_potion extends consumable_item
+{
+	health_potion()
+	{
+		ability = new Gain_HP_hp_pot();
+		rules_description = ability.description;
+
+		name = "health potion";
+		flavor_text = "a vial filled with a red liquid. It smells of cherries";
+		weight = 0;
+		value = 150;
+		
+		
+	}
+	
+	class Gain_HP_hp_pot extends Action
+	{
+		Gain_HP_hp_pot()
+		{
+			description = "Drink a Potion to restore health";
+		}
+		
+		public void What_Happens()
+		{
+			helpers.PC.gain_health(5);
+			helpers.output("You feel your wounds re-knit and close");
+			helpers.finish_output();
+		}
+	}
+
+}
 
 //////////////////////////////
 class helpers

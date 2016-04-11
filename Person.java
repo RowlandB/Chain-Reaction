@@ -65,6 +65,12 @@ abstract class  Person
 			{
 				int y = x + 1;
 				//TODO: check if the NPC would share this
+				
+/*				if(knowledge_base.get(x).is_sharable())
+				{
+					
+				}
+*/				
 				String output = Integer.toString(y) + ") " + knowledge_base.get(x).Get_Description();
 				helpers.output(output);
 			}
