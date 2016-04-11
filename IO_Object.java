@@ -122,6 +122,8 @@ class Frame_IO_Object extends IO_Object
 		buffer_text="";
 		current_output_text = current_output_text + last_text;
 		output_text.setText(current_output_text);
+		
+		output_text.setCaretPosition(current_output_text.length());
 	}
 	
 	boolean ready_for_input;

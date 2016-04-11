@@ -233,6 +233,21 @@ class Player_Character
 		{
 			my_inventory.Display_Inventory();
 		}
+	}
+	
+	class UseItem extends Action
+	{
+		UseItem()
+		{
+			description = "Use an item in your inventory";
+		}
+		
+		public void What_Happens()
+		{
+			helpers.output("Which item would you like to use?");
+			item useable_item = my_inventory.Select_Item();
+			
+		}
 		
 	}
 	
@@ -285,19 +300,24 @@ class Player_Character
 			total_weight = 0;
 		}
 		
-//		public Vector<Action> get_Item_Actions()
-//		{
-//			Vector<Action> Actions = new Vector<Action>();
-//			for(int x=0; x<the_items.size(); x++)
-//			{
-//				if(the_items.get(x) instanceof consumable_item)
-//				{
-//					
-//					
-//				}
-//			}
-//			return Actions;
-//		}
+		public item Select_Item()
+		{
+			if(the_items.size()==0)
+			{
+				helpers.output("You have nothing. Dang, you're poor");
+			}
+			else
+			{
+				for(int x=0; x < the_items.size(); x++)
+				{
+					helpers.output(Integer.toString(x) + " " + the_items.get(x).get_name());
+				}
+			}
+			helpers.finish_output();
+			int which_one = helpers.which_one(the_items.size());
+			
+			return the_items.get(which_one);
+		}
 		
 		public void Display_Inventory()
 		{
@@ -316,19 +336,32 @@ class Player_Character
 			helpers.finish_output();
 		}
 		
-		public void add_item(item_helper to_be_added)
+		public void add_item(item to_be_added)
 		{
 			the_items.add(to_be_added);
 			total_weight += to_be_added.get_weight();
 		}
 		
-		public void remove_1_item(int which)
+		public void remove_item(int which, int how_many)
 		{
-			
+			if(the_items.get(which).check_quantity(how_many))
+			{
+				remove_all_of_item(which);
+			}
+			else
+			{
+				remove_some_of_item(which, how_many);
+			}
 			
 		}
 		
-		public void remove_all_of_item(int which)
+		private void remove_some_of_item(int which, int how_many)
+		{
+			total_weight -= the_items.get(which).get_weight();
+			the_items.get(which).change_quantity(how_many);
+		}
+		
+		private void remove_all_of_item(int which)
 		{
 			total_weight -= the_items.get(which).get_weight();
 			the_items.remove(which);
@@ -336,7 +369,7 @@ class Player_Character
 		
 		private equippable_item empty_slot;
 		private int total_weight;
-		private ArrayList<item_helper> the_items;
+		private ArrayList<item> the_items;
 	}
 
 	
@@ -517,7 +550,7 @@ class Castle extends Location
 
 ///////////////////////////////
 
-class item_helper
+/*class item_helper
 {
 	public int get_weight()
 	{
@@ -531,10 +564,10 @@ class item_helper
 		helpers.finish_output();
 	}
 	
-	public boolean has_action()
-	{
-		return the_actual_item.has_action();
-	}
+//	public String Get_Name()
+//	{
+//		return the_actual_item.get_name();
+//	}
 	
 	public boolean removeOne()
 	{
@@ -556,8 +589,10 @@ class item_helper
 	}
 	
 	private int how_many;
-	private item the_actual_item;
+	public item the_actual_item;
 }
+*/
+
 
 //TODO: finish item
 class item
@@ -574,6 +609,7 @@ class item
 		helpers.output(description);
 		helpers.output("Weight: " + weight + " Value: " + value + weight/value);
 		helpers.output("Stolen: " + stolen);
+		helpers.output("Count: " + quantity);
 		helpers.finish_output();
 	}
 	
@@ -597,18 +633,63 @@ class item
 		return has_action;
 	}
 	
-	private String name;
-	private String description;
+	public int get_count()
+	{
+		return quantity;
+	}
+	
+	public boolean check_quantity(int check_number)
+	{
+		return (check_number <= this.quantity);
+	}
+	
+	
+	/**
+	 * a check should be done that this does not set to negative. I will error you if you do.
+	 * same with going to 0. Delete the item if you're going to 0 of them.
+	 * 
+	 * @param how_many to add
+	 * if negative, removes them
+	 */
+	public void change_quantity(int how_many) 
+	{
+		assert(this.quantity + how_many <= 0);
+		
+		quantity = quantity + how_many;
+	}
+	
+	protected String name;
+	protected String description;
 	private boolean is_equipped;
-	private int weight;
-	private int value;
-	private boolean stolen;
-	private boolean has_action;
+	protected int weight;
+	protected int value;
+	protected boolean stolen;
+	protected boolean has_action;
+	protected int quantity;
 }
 
 //TODO: finish readable_item
 class readable_item extends item
 {
+	
+	public void Display()
+	{
+		helpers.output("Name: " + name);
+		helpers.output(description);
+		helpers.output("Weight: " + weight + " Value: " + value + weight/value);
+		helpers.output("Stolen: " + stolen);
+		helpers.output("Count: " + quantity);
+		helpers.output("Read: " + read);
+		helpers.finish_output();
+	}
+	
+	public void Read()
+	{
+		helpers.output(text);
+		helpers.finish_output();
+		
+		read = true;
+	}
 	
 	private String text;
 	private boolean read;
@@ -644,24 +725,36 @@ class equippable_item extends item
 	private equip_region slot;
 }
 
-//TODO: finish consumable_item
-interface consumable_item
-{
-	class on_use extends Action{};
-	
-	on_use ability = new on_use();
-}
-
-class health_potion extends item implements consumable_item
-{
-	health_potion()
-	{
-		
-		
-	}
-	
-	
-}
+////TODO: finish consumable_item
+//interface consumable_item
+//{
+//	class on_use extends Action{};
+//	
+//	on_use ability = new on_use();
+//}
+//
+//class health_potion extends item implements consumable_item
+//{
+//	health_potion()
+//	{
+//		ability = new Gain_HP_hp_pot();
+//		
+//	}
+//	
+//	class Gain_HP_hp_pot extends on_use
+//	{
+//		Gain_HP_hp_pot()
+//		{
+//			description = "Drink a Potion to restore health";
+//		}
+//		
+//		public void What_Happens()
+//		{
+//			helpers.PC.gain_health(5);
+//		}
+//	}
+//
+//}
 
 //////////////////////////////
 class helpers

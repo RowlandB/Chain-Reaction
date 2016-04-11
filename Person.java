@@ -8,6 +8,7 @@ abstract class  Person
 		name = "Mysterious Stranger with no distinguishing characteristics";
 		
 		knowledge_base = new Vector<Fact>();
+		knowledge_base.add(new Fact("done","I have nothing else interesting to talk about"));
 		
 	}
 	
@@ -30,7 +31,7 @@ abstract class  Person
 	public void Fight(Person opponent)
 	{
 		int difference = this.fight_power - opponent.fight_power;
-		if(difference >0)
+		if(difference > 0)
 		{
 			opponent.LoseFight(difference);
 		}
@@ -56,18 +57,30 @@ abstract class  Person
 		Chat_Greeting();
 		
 		boolean stay = true;
-		while(stay)
-		for(int x = 0; x < knowledge_base.size(); x++)
-		{
-			int y = x +1;
-			String output = Integer.toString(y) + ") " + knowledge_base.get(x).Get_Description();
-			helpers.output(output);
-		}
-		helpers.finish_output();
-
-	
-		int answer = helpers.which_one(knowledge_base.size());
+		boolean still_talking = true;
 		
+		while(stay && still_talking)
+		{
+			for(int x = 0; x < knowledge_base.size(); x++)
+			{
+				int y = x + 1;
+				//TODO: check if the NPC would share this
+				String output = Integer.toString(y) + ") " + knowledge_base.get(x).Get_Description();
+				helpers.output(output);
+			}
+			helpers.finish_output();
+			
+			int answer = helpers.which_one(knowledge_base.size());
+			
+			if(knowledge_base.get(answer).Get_Description()=="done")
+			{
+				still_talking = false;
+			}
+			else
+			{
+				helpers.output(knowledge_base.get(answer).Get_Fact());
+			}
+		}
 		//TODO maybe do something depending on how character feels about him
 		
 	}
@@ -210,6 +223,7 @@ class Noble_Kesh extends Noble
 	{
 		super(L,N);
 		//TODO: add some knowledge so that it doesn't error
+		knowledge_base.add(new Fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
 	}
 	
 }
