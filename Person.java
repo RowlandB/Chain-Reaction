@@ -84,7 +84,9 @@ abstract class  Person
 			}
 			else
 			{
+				
 				helpers.output(knowledge_base.get(answer).Get_Fact());
+				helpers.get_PC().add_fact(knowledge_base.get(answer));
 			}
 		}
 		//TODO maybe do something depending on how character feels about him
@@ -203,7 +205,7 @@ abstract class Noble extends Person
 	Noble(Location Start, String their_name)
 	{
 		name = their_name;
-		mood =Mood.ambivalent;
+		mood = Mood.ambivalent;
 	}
 	
 	public void Act()

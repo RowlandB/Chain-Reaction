@@ -21,7 +21,7 @@ public class Main
 		places.add(Keshies_Castle);
 				
 		/////Player
-		Player_Character The_Player = new Player_Character(SL);
+		Player_Character The_Player = new Player_Character(SL, "Jon Snow");
 		
 		new helpers(The_Player);
 		
@@ -52,11 +52,15 @@ public class Main
 class Player_Character
 {
 	
-	public  Player_Character(Location Start)
+	public  Player_Character(Location Start, String my_name)
 	{
 		this.my_inventory = new Inventory();
 
 		my_inventory.add_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
+		my_inventory.add_item(new item());
+		my_inventory.add_item(new health_potion());
+		
+		this.my_knowledge = new Knowledge();
 		
 		this.what_do = new Vector<Action>(0);
 
@@ -66,15 +70,14 @@ class Player_Character
 		what_do.add(new DoNothing());
 		what_do.add(new CheckInventory());
 		what_do.add(new UseItem());
+		what_do.add(new Ruminate());
 		
 		//TODO: initilize each Action
 		
 		//use item in inventory
 		
 		
-		
-		
-		
+		this.name = my_name;
 		this.here = Start;
 		this.current_hp = 100;
 		this.total_hp = 100;
@@ -247,32 +250,28 @@ class Player_Character
 			{
 				item useable_item = my_inventory.Select_Item();
 				
+				useable_item.get_abiltiy().What_Happens();
 				
-				/*TODO: Much better way of doing this is to create a 'USE' Action for all items, and call it. 'USE' should then tell us
-				if we need to do something*/
-				if(useable_item.getClass().getSuperclass().getName().equals("consumable_item"))
-				{
-					((consumable_item)useable_item).ability.What_Happens();
-					my_inventory.remove_item(useable_item,1);
-				}
-				else if(useable_item.getClass().getName().equals("readable_item"))
-				{
-					((readable_item)useable_item).Read();
-				}
-				else
-				{
-					helpers.output("You can't use that!");
-				}
 			}
 			else
 			{
 				helpers.output("You have nothing. Dang, you're poor");
 			}
 			
-			
-			
+		}
+	}
+	
+	class Ruminate extends Action
+	{
+		Ruminate()
+		{
+			description = "View previously discovered facts";
 		}
 		
+		public void What_Happens()
+		{
+			my_knowledge.ruminate();
+		}
 	}
 	
 	
@@ -312,6 +311,16 @@ class Player_Character
 	public void gain_health(int how_much)
 	{
 		
+	}
+	
+	public void add_fact(Fact new_fact)
+	{
+		my_knowledge.add_Fact(new_fact);
+	}
+	
+	public void decrement_consumable(item consume)
+	{
+		my_inventory.remove_item(consume, 1);
 	}
 	
 //////////////////////////////////////
@@ -360,6 +369,7 @@ class Player_Character
 			{
 				for(int x=0; x < the_items.size(); x++)
 				{
+					helpers.output("=============");
 					the_items.get(x).Display();
 				}
 			}
@@ -422,15 +432,67 @@ class Player_Character
 		private ArrayList<item> the_items;
 	}
 
+	class Knowledge
+	{
+		Knowledge()
+		{
+			the_Facts = new ArrayList<Fact>();
+		}
+		
+		public void add_Fact(Fact new_info)
+		{
+			if(!this.contains_id(new_info.Get_id()))
+			{
+				the_Facts.add(new_info);
+			}
+			//TODO: else?
+		}
+		
+		public void ruminate()
+		{
+			//TODO: looks at known facts
+			if(the_Facts.size()==0)
+			{
+				helpers.output("You know nothing, " + name);
+				helpers.finish_output();
+			}
+			else
+			{
+				for(int x=0; x<the_Facts.size(); x++)
+				{
+					helpers.output("=============");
+					the_Facts.get(x).display_fact();
+				}
+			}
+		}
+		
+		private boolean contains_id(int id)
+		{
+			for(int x=0; x<the_Facts.size(); x++)
+			{
+				if(the_Facts.get(x).Get_id()==id)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		
+		private ArrayList<Fact> the_Facts;
+	}
 	
 	
 //////////////////////////////////////	
 	
+	private String name;
+	private Knowledge my_knowledge;
 	private Inventory my_inventory;
 	private Vector<Action> what_do;
 	private Location here;
 	private int total_hp;
 	private int current_hp;
+	
 }
 
 ///////////////////////////////
@@ -463,7 +525,7 @@ class Fact
 	{
 		helpers.output(basic_description);
 		helpers.output(hard_facts);
-		helpers.output(Integer.toString(my_id));
+		//helpers.output(Integer.toString(my_id));
 		helpers.finish_output();
 
 	}
@@ -645,12 +707,36 @@ class Castle extends Location
 
 
 //TODO: finish item
+//don't make this abstract. You can have random 'stuff' items
 class item
 {
 	item()
 	{
 		
+		name = "a 'thing'";
+		rules_description = "no, really, this is just the default item description, it does nothing";
+		flavor_text = "a boring 'thing' with no discernable use";
+		is_equipped = false;
+		weight = 0;
+		value = 0;
+		stolen = false;
+		ability = new Nothing();
 		
+		quantity=1;
+	}
+	
+	class Nothing extends Action
+	{
+		Nothing()
+		{
+			description = "nothing will happen";
+		}
+		
+		public void What_Happens()
+		{
+			helpers.output("surprisingly, nothing happens");
+			helpers.finish_output();
+		}
 	}
 	
 	public void Display()
@@ -678,9 +764,9 @@ class item
 		return name;
 	}
 	
-	public boolean has_action()
+	public Action get_abiltiy()
 	{
-		return has_action;
+		return ability;
 	}
 	
 	public int get_count()
@@ -715,7 +801,8 @@ class item
 	protected int weight;
 	protected int value;
 	protected boolean stolen;
-	protected boolean has_action;
+	protected Action ability;
+	
 	protected int quantity;
 }
 
@@ -745,13 +832,23 @@ class readable_item extends item
 		helpers.finish_output();
 	}
 	
-	public void Read()
+	class Read extends Action
 	{
-		helpers.output(text);
-		helpers.finish_output();
+		Read()
+		{
+			description = "Display the writing";
+		}
 		
-		read = true;
+		public void What_Happens()
+		{
+			helpers.output(text);
+			helpers.finish_output();
+			
+			read = true;
+		}
+
 	}
+	
 	
 	private String text;
 	private boolean read;
@@ -791,7 +888,18 @@ class equippable_item extends item
 abstract class consumable_item extends item
 {
 	
-	protected Action ability;
+	abstract class consume extends Action
+	{
+		final public void What_Happens()
+		{
+			helpers.get_PC().decrement_consumable(the_item);
+			Other_Happenings();
+		}
+		
+		abstract protected void Other_Happenings();
+	}
+	
+	private item the_item=this;
 }
 
 class health_potion extends consumable_item
@@ -805,18 +913,16 @@ class health_potion extends consumable_item
 		flavor_text = "a vial filled with a red liquid. It smells of cherries";
 		weight = 0;
 		value = 150;
-		
-		
 	}
 	
-	class Gain_HP_hp_pot extends Action
+	class Gain_HP_hp_pot extends consume
 	{
 		Gain_HP_hp_pot()
 		{
 			description = "Drink a Potion to restore health";
 		}
 		
-		public void What_Happens()
+		public void Other_Happenings()
 		{
 			helpers.PC.gain_health(5);
 			helpers.output("You feel your wounds re-knit and close");
