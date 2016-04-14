@@ -59,9 +59,6 @@ class Player_Character
 		my_inventory.add_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
 		my_inventory.add_item(new item());
 		my_inventory.add_item(new health_potion());
-		my_inventory.add_item(new lazy_equip(equip_region.one_handed));
-		my_inventory.add_item(new lazy_equip(equip_region.one_handed));
-		my_inventory.add_item(new lazy_equip(equip_region.two_handed));
 		
 		this.my_knowledge = new Knowledge();
 		
@@ -70,9 +67,10 @@ class Player_Character
 		what_do.add(new LookAroundtheRoom());
 		what_do.add(new Move());
 		what_do.add(new Chat());
-		//what_do.add(new ExamineInventory());
-		what_do.add(new Ruminate());
 		what_do.add(new DoNothing());
+		what_do.add(new CheckInventory());
+		what_do.add(new UseItem());
+		what_do.add(new Ruminate());
 		
 		//TODO: initilize each Action
 		
@@ -224,54 +222,41 @@ class Player_Character
 		{}
 	}
 	
-	class ExamineInventory extends Action
+	class CheckInventory extends Action
 	{
-		ExamineInventory()
+		CheckInventory()
 		{
 			description = "Check out your items";
 		}
 		
 		public void What_Happens()
 		{
-			int answer = 0;
-			//options
-			while(answer != 4)
+			my_inventory.Display_Inventory();
+		}
+	}
+	
+	class UseItem extends Action
+	{
+		UseItem()
+		{
+			description = "Use an item in your inventory";
+		}
+		
+		public void What_Happens()
+		{
+			helpers.output("Which item would you like to use?");
+			
+			if(!my_inventory.isEmpty())
 			{
-				helpers.output("1) View Inventory");
-				helpers.output("2) Use an Item");
-				helpers.output("3) Equip an Item");
-				helpers.output("4) Done");
-				helpers.finish_output();
-			
-				answer = helpers.which_one(4) + 1;
-
-				if(answer == 1)
-				{
-					my_inventory.Display_Inventory();					
-				}
-				else if(answer == 2)
-				{
-					helpers.output("Which item would you like to use?");
-					
-					if(!my_inventory.isEmpty())
-					{
-						item useable_item = my_inventory.Select_Item();
-						
-						useable_item.get_abiltiy().What_Happens();
-						
-					}
-					else
-					{
-						helpers.output("You have nothing. Dang, you're poor");
-					}
-				}
-				else if(answer == 3)
-				{
-					my_inventory.Equip_Item();
-				}
+				item useable_item = my_inventory.Select_Item();
+				
+				useable_item.get_abiltiy().What_Happens();
+				
 			}
-			
-			
+			else
+			{
+				helpers.output("You have nothing. Dang, you're poor");
+			}
 			
 		}
 	}
@@ -289,20 +274,6 @@ class Player_Character
 		}
 	}
 	
-	class Equip_Items extends Action
-	{
-		Equip_Items()
-		{
-			description = "Equip Items";
-		}
-		
-		public void What_Happens()
-		{
-			int the_item = my_inventory.Select_Item_Location();
-			my_inventory.equip_item(the_item);
-		}
-		
-	}
 	
 	//////
 	
@@ -360,35 +331,8 @@ class Player_Character
 		{
 			the_items = new ArrayList(0);
 			total_weight = 0;
-			
-			head = new item_location(equip_region.head, -1);        
-			body = new item_location(equip_region.body, -1);        
-			ring1 = new item_location(equip_region.ring, -1);       
-			ring2 = new item_location(equip_region.ring, -1);       
-			amulet = new item_location(equip_region.amulet, -1);      
-			one_handed1 = new item_location(equip_region.one_handed, -1); 
-			one_handed2 = new item_location(equip_region.one_handed, -1); 
-			two_handed = new item_location(equip_region.two_handed, -1);
 		}
 		
-		public void Equip_Item()
-		{
-			// TODO Auto-generated method stub
-			
-			helpers.output("Which item would you like to equip?");
-			
-			if(!my_inventory.isEmpty())
-			{
-				int useable_item = my_inventory.Select_Item_Location();
-				
-				my_inventory.equip_item(useable_item);
-			}
-			else
-			{
-				helpers.output("You have nothing. Dang, you're poor");
-			}
-		}
-
 		public boolean isEmpty()
 		{
 			if(the_items.size()==0)
@@ -413,20 +357,6 @@ class Player_Character
 			int which_one = helpers.which_one(the_items.size());
 			
 			return the_items.get(which_one);
-		}
-		
-		private int Select_Item_Location()
-		{
-			for(int x=1; x <= the_items.size(); x++)
-			{
-				helpers.output(Integer.toString(x) + ") " + the_items.get(x-1).get_name());
-			}
-		
-			helpers.finish_output();
-
-			int which_one = helpers.which_one(the_items.size());
-			
-			return which_one;
 		}
 		
 		public void Display_Inventory()
@@ -455,7 +385,7 @@ class Player_Character
 		
 		public void remove_item(int which, int how_many)
 		{
-			if(the_items.get(which).have_more_than(how_many))
+			if(the_items.get(which).have_x_or_more(how_many))
 			{
 				remove_some_of_item(which, how_many);
 				
@@ -497,149 +427,7 @@ class Player_Character
 			the_items.remove(which);
 		}
 		
-		//please don't open this. I'm embarrased. It's spaghetti code. And it hurts.
-		private void equip_item(int which)
-		{	
-			item new_item = the_items.get(which);
-			equip_region slot = new_item.get_slot();
-						
-			if(slot==equip_region.not_equippable)
-			{
-				helpers.output("uh, you can't equip that");
-				helpers.finish_output();
-			}
-			else
-			{
-				//check if its slot has something in it
-					//unequip it
-				
-				//call the on_equip function
-				equippable_item the_one = (equippable_item) the_items.get(which);
-				
-				if(slot == equip_region.head)
-				{
-					if(head.iventory_location >= 0)
-					{
-						unequip_item(head);
-					}
-					head.iventory_location = which;
-				}
-				else if(slot == equip_region.body)
-				{
-					if(body.iventory_location >= 0)
-					{
-						unequip_item(body);
-					}
-					body.iventory_location = which;
-				}
-				else if(slot == equip_region.ring)
-				{
-					//check both rings
-					if(ring1.iventory_location >= 0)
-					{
-						//check other one instead
-						if(ring2.iventory_location >= 0)
-						{
-							unequip_item(ring2);
-						}
-						ring2.iventory_location = which;
-					}
-					else
-					{
-						ring1.iventory_location = which;
-					}
-				}
-				else if(slot == equip_region.amulet)
-				{
-					if(amulet.iventory_location >= 0)
-					{
-						unequip_item(amulet);
-					}
-					amulet.iventory_location = which;
-				}
-				else if(slot == equip_region.one_handed)
-				{
-					//check 1st hand
-					if(one_handed1.iventory_location >= 0)
-					{
-						//check other hand
-						if(one_handed2.iventory_location >= 0)
-						{
-							unequip_item(one_handed2);
-						}
-						one_handed2.iventory_location = which;
-					}
-					else if(two_handed.iventory_location >= 0) //check 2 handed
-					{
-						unequip_item(two_handed);
-					}
-					else
-					{
-						one_handed1.iventory_location = which;
-					}
-				}
-				else if(slot == equip_region.two_handed)
-				{
-					//check 1, 2, and both
-					if(two_handed.iventory_location >= 0)
-					{
-						unequip_item(two_handed);
-					}
-					else if(one_handed1.iventory_location >= 0)
-					{
-						unequip_item(one_handed1);
-						
-						//check other hand
-						if(one_handed2.iventory_location >= 0)
-						{
-							unequip_item(one_handed2);
-						}
-					}
-					two_handed.iventory_location = which;
-				}
-				
-				
-				the_one.on_equip();
-			}
-			
-		}
-		
-		
-		
-		private void unequip_item(item_location which)
-		{	
-			//call on_unequip
-			equippable_item the_one = (equippable_item) the_items.get(which.iventory_location);
-			the_one.on_unequip();
-			
-			//set slot's value to -1
-			which.iventory_location = -1;
-		}
-		
-		private class item_location
-		{
-			item_location(equip_region body_slot, int inventory_place)
-			{
-				slot = body_slot;
-				iventory_location = inventory_place;
-			}
-			
-			public equip_region slot;
-			public int iventory_location;
-		}
-		
-		//TODO: I'm 90% sure I don't need this anymore
-		//store the location of the item in the inventory arraylist
-		//store '-1' if nothing is equipped
-		private item_location head;
-		private item_location body;
-		private item_location ring1;
-		private item_location ring2;
-		private item_location amulet;
-		private item_location one_handed1;
-		private item_location one_handed2;
-		private item_location two_handed;
-		
+		private equippable_item empty_slot;
 		private int total_weight;
 		private ArrayList<item> the_items;
 	}
@@ -872,6 +660,51 @@ class Castle extends Location
 
 }
 
+///////////////////////////////
+
+/*class item_helper
+{
+	public int get_weight()
+	{
+		return how_many*the_actual_item.get_weight();
+	}
+	
+	public void Display()
+	{
+		the_actual_item.Display();
+		helpers.output("Number: " + how_many);
+		helpers.finish_output();
+	}
+	
+//	public String Get_Name()
+//	{
+//		return the_actual_item.get_name();
+//	}
+	
+	public boolean removeOne()
+	{
+		if(how_many > 1)
+		{
+			how_many = how_many-1;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	
+	public void QuickDisplay()
+	{
+		helpers.output(the_actual_item.get_name() + "    " + Integer.toString(how_many));
+	}
+	
+	private int how_many;
+	public item the_actual_item;
+}
+*/
+
 
 //TODO: finish item
 //don't make this abstract. You can have random 'stuff' items
@@ -883,11 +716,12 @@ class item
 		name = "a 'thing'";
 		rules_description = "no, really, this is just the default item description, it does nothing";
 		flavor_text = "a boring 'thing' with no discernable use";
+		is_equipped = false;
 		weight = 0;
-		value = 0.0000001;
+		value = 0;
 		stolen = false;
 		ability = new Nothing();
-		slot=equip_region.not_equippable;
+		
 		quantity=1;
 	}
 	
@@ -920,9 +754,9 @@ class item
 		return weight;
 	}
 	
-	public equip_region get_slot()
+	public boolean get_equipped()
 	{
-		return slot;
+		return is_equipped;
 	}
 	
 	public String get_name()
@@ -940,9 +774,9 @@ class item
 		return quantity;
 	}
 	
-	public boolean have_more_than(int check_number)
+	public boolean have_x_or_more(int check_number)
 	{
-		return (check_number > this.quantity);
+		return (check_number <= this.quantity);
 	}
 	
 	
@@ -963,11 +797,12 @@ class item
 	protected String name;
 	protected String rules_description;
 	protected String flavor_text;
+	private boolean is_equipped;
 	protected int weight;
-	protected double value;
+	protected int value;
 	protected boolean stolen;
 	protected Action ability;
-	protected equip_region slot;
+	
 	protected int quantity;
 }
 
@@ -1020,14 +855,8 @@ class readable_item extends item
 }
 
 //TODO: finish equippable_item
-abstract class equippable_item extends item
+class equippable_item extends item
 {
-	equippable_item(equip_region where)
-	{
-		equipped = false;
-		slot = where;
-	}
-	
 	public void Display()
 	{
 		super.Display();
@@ -1035,31 +864,25 @@ abstract class equippable_item extends item
 		helpers.finish_output();
 	}
 	
-	public void on_equip()
+	private void on_equip()
 	{
-		System.err.println("equipped " + this.name + " item");
-		equipped = true;
+		
 		
 	}
 	
-	public void on_unequip()
+	private void on_unequip()
 	{
-		System.err.println("unequipped " + this.name + " item");
-		equipped = false;
+		
+		
 	}
 	
-	private boolean equipped;
-}
-
-//only here for testing
-class lazy_equip extends equippable_item
-{
-	lazy_equip(equip_region where)
+	protected enum equip_region
 	{
-		super(where);
+		head, body, ring, amulet, one_handed, two_handed
 	}
+	
+	private equip_region slot;
 }
-
 
 
 abstract class consumable_item extends item
@@ -1108,7 +931,6 @@ class health_potion extends consumable_item
 	}
 
 }
-
 
 //////////////////////////////
 class helpers
@@ -1159,8 +981,7 @@ class helpers
 	static IO_Object IO;
 }
 
-enum equip_region
-{
-	head, body, ring, amulet, one_handed, two_handed, not_equippable
-}
+
+
+
 

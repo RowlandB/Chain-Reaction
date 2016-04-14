@@ -94,8 +94,6 @@ class Frame_IO_Object extends IO_Object
 		input_text=input;
 //		input_button=button;
 		window=frame;
-		
-		input_text.requestFocusInWindow();
 	}
 	
 	public String Input_String()
