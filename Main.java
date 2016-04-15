@@ -16,9 +16,11 @@ public class Main
 		Location Blacksmith = new Forge("Blacksmith's");
 		Location Bobs_Fields = new Field("Bob's Field");
 		Location Keshies_Castle = new Castle("Keshie's Castle");
+		Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
 		places.add(Blacksmith);
 		places.add(Bobs_Fields);
 		places.add(Keshies_Castle);
+		places.add(Dungeon);
 				
 		/////Player
 		Player_Character The_Player = new Player_Character(SL, "Jon Snow");
@@ -78,6 +80,7 @@ class Player_Character
 		
 		//use item in inventory
 		
+		this.mobility = new ArrayList<mobility_score>();
 		
 		this.name = my_name;
 		this.here = Start;
@@ -164,17 +167,26 @@ class Player_Character
 		{
 			helpers.output("Where?");
 			
+			int y=1;
+			ArrayList<Location> potential_places = new ArrayList<Location>();
 			for(int x = 0; x<Main.places.size(); x++)
 			{
-				int y = x+1;
-				String output = y + ") " + Main.places.get(x).Where();
-				helpers.output(output);
+				Location place = Main.places.get(x);
+				
+				
+				if(place.can_individual_visit(get_score(place.Where())))
+				{
+					potential_places.add(place);
+					String output = y + ") " + place.Where();
+					helpers.output(output);
+					y++;
+				}
 			}
 			helpers.finish_output();
 			
-			int answer = helpers.which_one(Main.places.size());
+			int answer = helpers.which_one(potential_places.size());
 			
-			Move_Character(Main.places.get(answer));
+			Move_Character(potential_places.get(answer));
 			
 		}
 	}
@@ -337,6 +349,21 @@ class Player_Character
 		here = where_to;
 	}
 	
+	public void learn_about_location(String location_name, int how_much)
+	{
+		for(int x=0; x<mobility.size(); x++)
+		{
+			if(mobility.get(x).name == location_name)
+			{
+				mobility.get(x).score = mobility.get(x).score + how_much;
+				return;
+			}
+		}
+		
+		//we didn't find it
+		mobility.add(new mobility_score(location_name, how_much+1));
+	}
+	
 	public void gain_health(int how_much)
 	{
 		
@@ -345,6 +372,8 @@ class Player_Character
 	public void add_fact(Fact new_fact)
 	{
 		my_knowledge.add_Fact(new_fact);
+		
+		new_fact.on_learn();
 	}
 	
 	public void decrement_consumable(item consume)
@@ -372,9 +401,7 @@ class Player_Character
 		}
 		
 		public void Equip_Item()
-		{
-			// TODO Auto-generated method stub
-			
+		{	
 			helpers.output("Which item would you like to equip?");
 			
 			if(!my_inventory.isEmpty())
@@ -628,7 +655,6 @@ class Player_Character
 			public int iventory_location;
 		}
 		
-		//TODO: I'm 90% sure I don't need this anymore
 		//store the location of the item in the inventory arraylist
 		//store '-1' if nothing is equipped
 		private item_location head;
@@ -696,7 +722,35 @@ class Player_Character
 	
 	
 //////////////////////////////////////	
+	//TODO: wrap all this in a class so it can be here and in Person
 	
+	private class mobility_score
+	{
+		mobility_score(String the_name, int new_score)
+		{
+			name = the_name;
+			score = new_score;
+		}
+		
+		public int score;
+		public String name;
+	}
+	
+	private int get_score(String location_name)
+	{
+		for(int x=0; x<mobility.size(); x++)
+		{
+			if(mobility.get(x).name == location_name)
+			{
+				return mobility.get(x).score;
+			}
+		}
+		return 1;
+	}
+
+	private ArrayList<mobility_score> mobility;	
+//////////////////////////////////////
+
 	private String name;
 	private Knowledge my_knowledge;
 	private Inventory my_inventory;
@@ -708,7 +762,7 @@ class Player_Character
 }
 
 ///////////////////////////////
-class Fact
+abstract class Fact
 {
 	Fact(String descr, String hf)
 	{
@@ -718,6 +772,11 @@ class Fact
 		unique_id++;
 	}
 	
+	public void on_learn()
+	{
+		//nothing
+	}
+
 	public String Get_Description()
 	{
 		return basic_description;
@@ -739,14 +798,35 @@ class Fact
 		helpers.output(hard_facts);
 		//helpers.output(Integer.toString(my_id));
 		helpers.finish_output();
-
 	}
 	
-	private String basic_description;
-	private String hard_facts;
-	private int my_id;
+	protected String basic_description;
+	protected String hard_facts;
+	protected int my_id;
 	
-	private static int unique_id = 1;
+	protected static int unique_id = 1;
+}
+
+class Dungeon_Fact extends Fact
+{
+	Dungeon_Fact(String descr, String hf)
+	{
+		super(descr,hf);
+	}
+	
+	public void on_learn()
+	{
+		helpers.get_PC().learn_about_location("Dungeon Below Keshie's Castle", 25);
+	}
+}
+
+class Goblins_Fact extends Fact
+{
+	Goblins_Fact(String descr, String hf)
+	{
+		super(descr,hf);
+	}
+	
 }
 
 ///////////////////////////////
@@ -783,6 +863,16 @@ abstract class Location
 		who_is_here = new LinkedList<Person>();
 		options = new Vector<Action>();
 		Loc_name = name;
+		accessibility = 0;
+	}
+	
+	public boolean can_individual_visit(int mobility)
+	{
+		if(mobility > accessibility)
+		{
+			return true;
+		}
+		return false;
 	}
 	
 	//A location will never remove a person by itself: this should only be called from Person
@@ -814,6 +904,7 @@ abstract class Location
 	private String Loc_name;
 	protected Vector<Action> options;
 	protected LinkedList<Person> who_is_here;
+	protected int accessibility; //lower is easier
 }
 
 ///////////////////////////////
@@ -827,7 +918,7 @@ class Start_Location extends Location
 ///////////////////////////////
 class Forge extends Location
 {
-	public Forge(String name)
+	Forge(String name)
 	{
 		super(name);
 	} 
@@ -837,7 +928,7 @@ class Forge extends Location
 ///////////////////////////////
 class Field extends Location
 {
-	public Field(String name)
+	Field(String name)
 	{
 		super(name);
 	}
@@ -848,7 +939,7 @@ class Field extends Location
 ///////////////////////////////
 class Castle extends Location
 {
-	public Castle(String name)
+	Castle(String name)
 	{
 		super(name);
 		Action laugh_at_plebs = new oppress_peasants();
@@ -867,9 +958,18 @@ class Castle extends Location
 				helpers.output("Haha! Those fools should have been born with money. Let's make them fight for coppers some more!");
 				helpers.finish_output();
 			}
-		
 	}
+}
 
+///////////////////////////////
+class Dungeon extends Location
+{
+	Dungeon(String name)
+	{
+		super(name);
+		accessibility = 20;
+	}
+	
 }
 
 

@@ -232,6 +232,7 @@ class Noble_Kesh extends Noble
 		super(L,N);
 		//TODO: add some knowledge so that it doesn't error
 		knowledge_base.add(new Fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
+		knowledge_base.add(new Learn_About_Dungeon("dungeons","We have a dungeon. You should visit it some time."));
 	}
 	
 }
