@@ -23,7 +23,7 @@ public class Main
 		places.add(Dungeon);
 				
 		/////Player
-		Player_Character The_Player = new Player_Character(SL, "Jon Snow");
+		Player_Character The_Player = new Player_Character(SL);
 		
 		new helpers(The_Player);
 		
@@ -54,10 +54,10 @@ public class Main
 class Player_Character
 {
 	
-	public  Player_Character(Location Start, String my_name)
+	public  Player_Character(Location Start)
 	{
 		this.my_inventory = new Inventory();
-
+		
 		my_inventory.add_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
 		my_inventory.add_item(new item());
 		my_inventory.add_item(new health_potion());
@@ -82,7 +82,7 @@ class Player_Character
 		
 		this.mobility = new ArrayList<mobility_score>();
 		
-		this.name = my_name;
+		this.name = "Jon Snow";
 		this.here = Start;
 		this.current_hp = 100;
 		this.total_hp = 100;
@@ -349,6 +349,8 @@ class Player_Character
 		here = where_to;
 	}
 	
+	////////////////
+	
 	public void learn_about_location(String location_name, int how_much)
 	{
 		for(int x=0; x<mobility.size(); x++)
@@ -379,6 +381,11 @@ class Player_Character
 	public void decrement_consumable(item consume)
 	{
 		my_inventory.remove_item(consume, 1);
+	}
+	
+	public Location Get_Location()
+	{
+		return this.here;
 	}
 	
 //////////////////////////////////////
@@ -820,14 +827,14 @@ class Dungeon_Fact extends Fact
 	}
 }
 
-class Goblins_Fact extends Fact
+class boring_fact extends Fact
 {
-	Goblins_Fact(String descr, String hf)
+	boring_fact(String descr, String hf)
 	{
 		super(descr,hf);
 	}
-	
 }
+
 
 ///////////////////////////////
 abstract class Action

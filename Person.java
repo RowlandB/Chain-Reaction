@@ -1,14 +1,20 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Vector;
 
 abstract class  Person
 {
-	public  Person()
+	
+	Person(Location L, String S)
 	{
-		name = "Mysterious Stranger with no distinguishing characteristics";
-		
+		place = L;
+		name = S;
+
 		knowledge_base = new Vector<Fact>();
-		knowledge_base.add(new Fact("done","I have nothing else interesting to talk about"));
+		knowledge_base.add(new boring_fact("done","I have nothing else interesting to talk about"));
+		
+		potential_actions = new ArrayList<Action>();
+		potential_actions.add(new does_nothing());
 		
 	}
 	
@@ -133,10 +139,19 @@ abstract class  Person
 	//Default Action used by Main
 	public void Act()
 	{
+		//'decide' on an action
+			//for now, always do nothing
+		Action the_action = potential_actions.get(0);
+
+		//do the action
+		the_action.What_Happens();
 		
-		String output = name + " does nothing interesting";
-		helpers.output(output);
-		helpers.finish_output();
+		//check if the player is in the same location
+			//notify player
+		if(helpers.get_PC().Get_Location().Where() == this.place.Where())
+		{
+			helpers.output(the_action.description);
+		}
 		
 	}
 	
@@ -171,6 +186,22 @@ abstract class  Person
 		return false;
 	}
 	
+	
+	class does_nothing extends Action
+	{
+		does_nothing()
+		{
+			String name = Get_Name();
+			description =  name + " does nothing";
+		}
+		
+		public void What_Happens()
+		{
+			
+		}
+	}
+
+	
 	/////////////////////////////
 	protected enum Mood
 	{
@@ -183,34 +214,25 @@ abstract class  Person
 	protected  int fight_power;
 	protected String name;
 	protected Location place;
+	protected ArrayList<Action> potential_actions;
 }
 
 abstract class Commoner extends Person
 {
 	Commoner(Location Start, String their_name)
 	{
-		name = their_name;
+		super(Start, their_name);
 		mood = Mood.angry;
 	}
 	
-	public void Act()
-	{
-		
-	}
-
 }
 
 abstract class Noble extends Person
 {
 	Noble(Location Start, String their_name)
 	{
-		name = their_name;
+		super(Start, their_name);
 		mood = Mood.ambivalent;
-	}
-	
-	public void Act()
-	{
-		
 	}
 	
 }
@@ -231,11 +253,10 @@ class Noble_Kesh extends Noble
 	{
 		super(L,N);
 		//TODO: add some knowledge so that it doesn't error
-		knowledge_base.add(new Fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
-		knowledge_base.add(new Learn_About_Dungeon("dungeons","We have a dungeon. You should visit it some time."));
+		knowledge_base.add(new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
+		knowledge_base.add(new Dungeon_Fact("dungeons","We have a dungeon. You should visit it some time."));
 	}
 	
 }
-
 
 
