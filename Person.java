@@ -16,6 +16,7 @@ abstract class  Person
 		potential_actions = new ArrayList<Action>();
 		potential_actions.add(new does_nothing());
 		
+		location_knowledge = new mobility_controller();
 	}
 	
 	public String Get_Name()
@@ -215,6 +216,7 @@ abstract class  Person
 	protected String name;
 	protected Location place;
 	protected ArrayList<Action> potential_actions;
+	protected mobility_controller location_knowledge;
 }
 
 abstract class Commoner extends Person

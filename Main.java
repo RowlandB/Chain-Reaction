@@ -53,7 +53,6 @@ public class Main
 ///////////////////////////////
 class Player_Character
 {
-	
 	public  Player_Character(Location Start)
 	{
 		this.my_inventory = new Inventory();
@@ -80,7 +79,7 @@ class Player_Character
 		
 		//use item in inventory
 		
-		this.mobility = new ArrayList<mobility_score>();
+		this.location_knowledge = new mobility_controller();
 		
 		this.name = "Jon Snow";
 		this.here = Start;
@@ -174,7 +173,7 @@ class Player_Character
 				Location place = Main.places.get(x);
 				
 				
-				if(place.can_individual_visit(get_score(place.Where())))
+				if(place.can_individual_visit(location_knowledge.get_score(place.Where())))
 				{
 					potential_places.add(place);
 					String output = y + ") " + place.Where();
@@ -351,20 +350,6 @@ class Player_Character
 	
 	////////////////
 	
-	public void learn_about_location(String location_name, int how_much)
-	{
-		for(int x=0; x<mobility.size(); x++)
-		{
-			if(mobility.get(x).name == location_name)
-			{
-				mobility.get(x).score = mobility.get(x).score + how_much;
-				return;
-			}
-		}
-		
-		//we didn't find it
-		mobility.add(new mobility_score(location_name, how_much+1));
-	}
 	
 	public void gain_health(int how_much)
 	{
@@ -387,6 +372,13 @@ class Player_Character
 	{
 		return this.here;
 	}
+	
+	public void learn_about_location(String location_name, int how_much)
+	{
+		location_knowledge.learn_about_location(location_name, how_much);
+		
+	}
+
 	
 //////////////////////////////////////
 	class Inventory
@@ -675,6 +667,7 @@ class Player_Character
 		
 		private int total_weight;
 		private ArrayList<item> the_items;
+		private mobility_controller arg;
 	}
 
 	class Knowledge
@@ -695,7 +688,6 @@ class Player_Character
 		
 		public void ruminate()
 		{
-			//TODO: looks at known facts
 			if(the_Facts.size()==0)
 			{
 				helpers.output("You know nothing, " + name);
@@ -731,31 +723,9 @@ class Player_Character
 //////////////////////////////////////	
 	//TODO: wrap all this in a class so it can be here and in Person
 	
-	private class mobility_score
-	{
-		mobility_score(String the_name, int new_score)
-		{
-			name = the_name;
-			score = new_score;
-		}
-		
-		public int score;
-		public String name;
-	}
 	
-	private int get_score(String location_name)
-	{
-		for(int x=0; x<mobility.size(); x++)
-		{
-			if(mobility.get(x).name == location_name)
-			{
-				return mobility.get(x).score;
-			}
-		}
-		return 1;
-	}
-
-	private ArrayList<mobility_score> mobility;	
+	
+	
 //////////////////////////////////////
 
 	private String name;
@@ -765,7 +735,7 @@ class Player_Character
 	private Location here;
 	private int total_hp;
 	private int current_hp;
-	
+	private mobility_controller location_knowledge;
 }
 
 ///////////////////////////////
@@ -1126,7 +1096,6 @@ class readable_item extends item
 	private boolean read;
 }
 
-//TODO: finish equippable_item
 abstract class equippable_item extends item
 {
 	equippable_item(equip_region where)
@@ -1217,6 +1186,59 @@ class health_potion extends consumable_item
 }
 
 
+
+
+//////////////////////////////
+
+class mobility_controller
+{
+	mobility_controller()
+	{
+		mobility = new ArrayList<mobility_score>();
+	}
+	
+	private class mobility_score
+	{
+		mobility_score(String the_name, int new_score)
+		{
+			name = the_name;
+			score = new_score;
+		}
+		
+		public int score;
+		public String name;
+	}
+	
+	public void learn_about_location(String location_name, int how_much)
+	{
+		for(int x=0; x<mobility.size(); x++)
+		{
+			if(mobility.get(x).name == location_name)
+			{
+				mobility.get(x).score = mobility.get(x).score + how_much;
+				return;
+			}
+		}
+		
+		//we didn't find it
+		mobility.add(new mobility_score(location_name, how_much+1));
+	}
+
+	public int get_score(String location_name)
+	{
+		for(int x=0; x<mobility.size(); x++)
+		{
+			if(mobility.get(x).name == location_name)
+			{
+				return mobility.get(x).score;
+			}
+		}
+		return 1;
+	}
+	
+	private ArrayList<mobility_score> mobility;	
+
+}
 //////////////////////////////
 class helpers
 {
