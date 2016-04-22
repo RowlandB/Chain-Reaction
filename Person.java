@@ -13,7 +13,7 @@ abstract class  Person
 		knowledge_base = new Vector<Fact>();
 		knowledge_base.add(new boring_fact("done","I have nothing else interesting to talk about"));
 		
-		potential_actions = new ArrayList<Action>();
+		potential_actions = new ArrayList<NPC_Action>();
 		potential_actions.add(new does_nothing());
 		
 		location_knowledge = new mobility_controller();
@@ -142,7 +142,7 @@ abstract class  Person
 	{
 		//'decide' on an action
 			//for now, always do nothing
-		Action the_action = potential_actions.get(0);
+		Action the_action = find_best_action();
 
 		//do the action
 		the_action.What_Happens();
@@ -157,6 +157,22 @@ abstract class  Person
 	}
 	
 	
+	private Action find_best_action() 
+	{
+		int action_location = 0;
+		int action_value = -1000;
+		for(int x=0; x<potential_actions.size(); x++)
+		{		
+			if(potential_actions.get(x).likelihood + helpers.random(-5, 5) > action_value)
+			{
+				action_value = potential_actions.get(x).likelihood;
+				action_location = x;
+			}
+		}
+		
+		return potential_actions.get(action_location);
+	}
+
 	private void LoseFight(int how_bad)
 	{
 		if(how_bad > 15)
@@ -188,12 +204,19 @@ abstract class  Person
 	}
 	
 	
-	class does_nothing extends Action
+	class NPC_Action extends Action
+	{
+		
+		protected int likelihood;
+	}
+	
+	class does_nothing extends NPC_Action
 	{
 		does_nothing()
 		{
 			String name = Get_Name();
 			description =  name + " does nothing";
+			likelihood = 5;
 		}
 		
 		public void What_Happens()
@@ -202,7 +225,6 @@ abstract class  Person
 		}
 	}
 
-	
 	/////////////////////////////
 	protected enum Mood
 	{
@@ -215,7 +237,7 @@ abstract class  Person
 	protected  int fight_power;
 	protected String name;
 	protected Location place;
-	protected ArrayList<Action> potential_actions;
+	protected ArrayList<NPC_Action> potential_actions;
 	protected mobility_controller location_knowledge;
 }
 
@@ -245,8 +267,24 @@ class Bob extends Commoner
 	{
 		super(L,N);
 		//TODO: add some knowledge so that it doesn't error
-	}
+		
+		class become_single_minded extends NPC_Action
+		{
+			become_single_minded()
+			{
+				String name = Get_Name();
+				description =  name + " becomes more single-minded";
+				likelihood = 1;
+			}
+			
+			public void What_Happens()
+			{
+				this.likelihood++;
+			}
+		}
 	
+		this.potential_actions.add(new become_single_minded());
+	}
 }
 
 class Noble_Kesh extends Noble

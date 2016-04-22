@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.Vector;
 
 public class Main
@@ -9,36 +10,12 @@ public class Main
 	
 	
 	public static void main(String [ ] args)
-	{	
-		
-		/////Locations	
-		Location SL = new Start_Location();
-		Location Blacksmith = new Forge("Blacksmith's");
-		Location Bobs_Fields = new Field("Bob's Field");
-		Location Keshies_Castle = new Castle("Keshie's Castle");
-		Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
-		places.add(Blacksmith);
-		places.add(Bobs_Fields);
-		places.add(Keshies_Castle);
-		places.add(Dungeon);
-				
+	{
+		Game_Initializer.Initialize(places,NPCs);
 		/////Player
-		Player_Character The_Player = new Player_Character(SL);
-		
+		Player_Character The_Player = new Player_Character(new Start_Location());
+				
 		new helpers(The_Player);
-		
-		
-		////Persons
-		Person Generic_Peasant = new Bob(Bobs_Fields, "Bob");
-		Bobs_Fields.AddPerson(Generic_Peasant);
-		NPCs.add(Generic_Peasant);
-		
-		Person Generic_Noble = new Noble_Kesh(Keshies_Castle, "High Lord Kesh of No-Funnington");
-		Keshies_Castle.AddPerson(Generic_Noble);
-		NPCs.add(Generic_Noble);
-		
-		
-		//TODO: initialize all the NPCs
 		
 		while(true)
 		{
@@ -71,7 +48,7 @@ class Player_Character
 		what_do.add(new LookAroundtheRoom());
 		what_do.add(new Move());
 		what_do.add(new Chat());
-		//what_do.add(new ExamineInventory());
+		what_do.add(new ExamineInventory());
 		what_do.add(new Ruminate());
 		what_do.add(new DoNothing());
 		
@@ -914,6 +891,25 @@ class Field extends Location
 }
 
 ///////////////////////////////
+class Hovel extends Location
+{
+	Hovel(String name)
+	{
+		super(name);
+	}
+}
+
+///////////////////////////////
+class Tavern extends Location
+{
+	Tavern(String name)
+	{
+		super(name);
+	}
+}
+
+
+///////////////////////////////
 class Castle extends Location
 {
 	Castle(String name)
@@ -1276,12 +1272,20 @@ class helpers
 	
 	static void finish_output()
 	{
+		IO.Output_String("");
 		IO.Output_Batch();
 	}
 	
 	static Player_Character get_PC()
 	{
 		return PC;
+	}
+	
+	//inclusive
+	static int random(int min, int max)
+	{
+		Random random = new Random();
+		return random.nextInt(max-min+1)+min;
 	}
 	
 	static Player_Character PC;
