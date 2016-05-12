@@ -8,7 +8,7 @@ To create an RPG that allows for dynamic NPCs. Ie, NPCs that will act without be
 This should create chain reactions, hence the name.
 
 Notes:
-If NPC action A can cause NPC action B, make sure than action B can't cause A. Otherwise, that can go infinite.
+At least that was the plan. Right now we're kinda at 'generic RPG 7,246'
 
 ==============
 Copyright Rowland Brown 2014
