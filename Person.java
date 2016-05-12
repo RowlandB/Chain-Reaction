@@ -122,15 +122,12 @@ abstract class  Person
 		{
 			helpers.output("[disgruntaled silence].");	
 		}
-		Personal_Greeting();
+		
+		helpers.output(personal_greeting);
+		
 		helpers.finish_output();
 	}
-	
-	private void Personal_Greeting()
-	{
-		helpers.output("I know a few things...");
-	}
-	
+		
 	public void GainInformation(Fact knowledge)
 	{
 		if(!fact_already_known(knowledge))
@@ -231,6 +228,7 @@ abstract class  Person
 	happy, sad, angry, ambivalent
 	}
 	
+	protected String personal_greeting;
 	protected Mood mood;
 	protected int pc_friendlyness_level; //0 = neutral, bigger is friendlier
 	protected Vector<Fact> knowledge_base;
@@ -261,42 +259,5 @@ abstract class Noble extends Person
 	
 }
 
-class Bob extends Commoner
-{
-	Bob(Location L, String N)
-	{
-		super(L,N);
-		//TODO: add some knowledge so that it doesn't error
-		
-		class become_single_minded extends NPC_Action
-		{
-			become_single_minded()
-			{
-				String name = Get_Name();
-				description =  name + " becomes more single-minded";
-				likelihood = 1;
-			}
-			
-			public void What_Happens()
-			{
-				this.likelihood++;
-			}
-		}
-	
-		this.potential_actions.add(new become_single_minded());
-	}
-}
-
-class Noble_Kesh extends Noble
-{
-	Noble_Kesh(Location L, String N)
-	{
-		super(L,N);
-		//TODO: add some knowledge so that it doesn't error
-		knowledge_base.add(new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
-		knowledge_base.add(new Dungeon_Fact("dungeons","We have a dungeon. You should visit it some time."));
-	}
-	
-}
 
 
