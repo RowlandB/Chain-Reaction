@@ -52,7 +52,7 @@ abstract class  Person
 	//Tells everyone in the location a piece of knowledge
 	public void Gossip(Fact knowledge)
 	{
-		LinkedList<Person> everyone =  place.GetEveryone();
+		Vector<Person> everyone =  place.GetEveryone();
 		for(int x = 0; x < everyone.size(); x++)
 		{
 			everyone.get(x).GainInformation(knowledge);
@@ -134,6 +134,11 @@ abstract class  Person
 			knowledge_base.add(knowledge);	
 	}
 
+	public void change_friendliness(int how_much)
+	{
+		pc_friendlyness_level+=how_much;
+	}
+	
 	//Default Action used by Main
 	public void Act()
 	{
@@ -152,7 +157,6 @@ abstract class  Person
 		}
 		
 	}
-	
 	
 	private Action find_best_action() 
 	{

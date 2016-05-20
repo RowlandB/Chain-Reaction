@@ -11,12 +11,12 @@ class Player_Character
 	{
 		this.my_inventory = new Inventory();
 		
-		my_inventory.add_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
-		my_inventory.add_item(new item());
-		my_inventory.add_item(new health_potion());
-		my_inventory.add_item(new lazy_equip(equip_region.one_handed));
-		my_inventory.add_item(new lazy_equip(equip_region.one_handed));
-		my_inventory.add_item(new lazy_equip(equip_region.two_handed));
+		my_inventory.add_new_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
+		my_inventory.add_new_item(new item());
+		my_inventory.add_new_item(new health_potion());
+		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
+		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
+		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
 		
 		this.my_knowledge = new Knowledge();
 		
@@ -41,43 +41,54 @@ class Player_Character
 		this.total_hp = 100;
 	}
 	
-	
+	public void add_action(Action new_action)
+	{
+		what_do.add(new_action);
+	}
 	
 	//displays at all the actions the player can do
 	public void InteractWithEnvironment()
 	{
-		int num_player_actions = what_do.size();
-		for(int x = 0; x < num_player_actions; x++)
+		Vector<Action> potential_actions = Get_Viable_Actions();
+		
+		helpers.output("What would you like to do?");
+		for(int x=0; x<potential_actions.size(); x++)
 		{
-			int y = x+1;
-			String output = y +") " + what_do.elementAt(x).description;
-			helpers.output(output);
+			helpers.output(String.valueOf(x+1) + ") " + potential_actions.get(x).description);
+		}
+		helpers.finish_output();
+
+		int which = helpers.which_one(potential_actions.size());
+		
+		potential_actions.get(which).What_Happens();
+	}
+	
+	
+	//TODO: add logic to ensure that a player can never get a blank action
+	private Vector<Action> Get_Viable_Actions()
+	{
+		Vector<Action> potentials = new Vector<Action>();
+		
+		for(int x=0; x<what_do.size(); x++)
+		{
+			if(what_do.get(x).can_be_done())
+			{
+				potentials.add(what_do.get(x));
+			}
 		}
 		
 		Vector<Action> other_options = here.Get_Actions();
 		
-		for(int z = 0; z < other_options.size(); z++)
+		for(int x=0; x<other_options.size(); x++)
 		{
-			int y = z+1+what_do.size();
-			String output = y +") " + other_options.elementAt(z).description;
-			helpers.output(output);
-		}
-		helpers.finish_output();
-		
-		int answer = helpers.which_one(num_player_actions + other_options.size());
-		
-		if(answer < num_player_actions)
-		{
-			Action_Flag_Test(this.what_do.get(answer));
-		}
-		else
-		{
-			Action_Flag_Test(here.Get_Actions().get(answer-num_player_actions));
+			if(other_options.get(x).can_be_done())
+			{
+				potentials.add(other_options.get(x));
+			}
 		}
 		
+		return potentials;
 	}
-	
-	
 	
 	class LookAroundtheRoom extends Action
 	{
@@ -89,7 +100,7 @@ class Player_Character
 		public void What_Happens()
 		{
 			String people;
-			LinkedList<Person> everyone =  here.GetEveryone();
+			Vector<Person> everyone =  here.GetEveryone();
 			if(everyone.size() == 0)
 			{
 				people = "There's no one here but you!";
@@ -154,7 +165,7 @@ class Player_Character
 		public void What_Happens()
 		{
 			String people;
-			LinkedList<Person> everyone =  here.GetEveryone();
+			Vector<Person> everyone =  here.GetEveryone();
 			if(everyone.size() == 0)
 			{
 				people = "There's no one to talk to! (unless you want to talk to yourself)";
@@ -269,30 +280,15 @@ class Player_Character
 		
 	}
 	
-	//////
-	
-	
-	//tests all the possible things that might stop the player from doing what he wants
-	//if he can't do what he wants, ask for another action. Nothing will have changed in the meantime, so it should be the same list as before
-	private void Action_Flag_Test(Action potential)
+	public void remove_action(Action one_to_remove)
 	{
-		if(potential.is_strenuous)
-		{
-			if(Player_is_Weak(potential))
-			{
-				helpers.output("It looks like you're too weak to " + potential.description);
-				helpers.finish_output();
-				this.InteractWithEnvironment();
-			}
-		}
-		else
-		{
-			potential.What_Happens();
-		}
-		
+		what_do.remove(one_to_remove);
 	}
 	
-	private boolean Player_is_Weak(Action stren)
+	
+	//////
+	
+	public boolean Player_is_Weak()
 	{
 		return (current_hp < total_hp/2);
 	}
@@ -322,6 +318,11 @@ class Player_Character
 		my_inventory.remove_item(consume, 1);
 	}
 	
+	public void decrement_consumable(String consume)
+	{	
+		my_inventory.remove_item(my_inventory.check_item(consume), 1);
+	}
+	
 	public Location Get_Location()
 	{
 		return this.here;
@@ -332,7 +333,20 @@ class Player_Character
 		location_knowledge.learn_about_location(location_name, how_much);
 		
 	}
-
+	
+	public void add_item(item new_item)
+	{
+		int where = my_inventory.check_item(new_item.get_name());
+		
+		if(where >= 0)
+		{
+			my_inventory.add_more(where,new_item.get_count());
+		}
+		else
+		{
+			my_inventory.add_new_item(new_item);
+		}
+	}
 	
 //////////////////////////////////////
 	class Inventory
@@ -353,6 +367,16 @@ class Player_Character
 			two_handed = new item_location(equip_region.two_handed, -1);
 		}
 		
+		public void add_more(int where, int count)
+		{
+			the_items.get(where).quantity+=count;
+		}
+
+		public int size()
+		{
+			return the_items.size();
+		}
+
 		public void Equip_Item()
 		{	
 			helpers.output("Which item would you like to equip?");
@@ -427,10 +451,24 @@ class Player_Character
 			helpers.finish_output();
 		}
 		
-		public void add_item(item to_be_added)
+		//TODO change to 'add new item'
+		public void add_new_item(item to_be_added)
 		{
 			the_items.add(to_be_added);
 			total_weight += to_be_added.get_weight();
+		}
+		
+		public int check_item(String item_name)
+		{
+			for(int x=0; x<the_items.size(); x++)
+			{
+				if(the_items.get(x).name==item_name)
+				{
+					return x;
+				}
+			}
+			
+			return -1;
 		}
 		
 		public void remove_item(int which, int how_many)
@@ -622,8 +660,22 @@ class Player_Character
 		private int total_weight;
 		private ArrayList<item> the_items;
 		private mobility_controller arg;
+		
 	}
 
+	public boolean has_item(String item_name)
+	{
+		if(my_inventory.check_item(item_name) >= 0)
+		{
+			return true;			
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+//////////////////	
 	class Knowledge
 	{
 		Knowledge()
@@ -690,6 +742,8 @@ class Player_Character
 	private int total_hp;
 	private int current_hp;
 	private mobility_controller location_knowledge;
+	
+	
 }
 
 ///////////////////////////////
@@ -738,39 +792,15 @@ abstract class Fact
 	protected static int unique_id = 1;
 }
 
-class Dungeon_Fact extends Fact
-{
-	Dungeon_Fact(String descr, String hf)
-	{
-		super(descr,hf);
-	}
-	
-	public void on_learn()
-	{
-		helpers.get_PC().learn_about_location("Dungeon Below Keshie's Castle", 25);
-	}
-}
-
-class boring_fact extends Fact
-{
-	boring_fact(String descr, String hf)
-	{
-		super(descr,hf);
-	}
-}
-
 
 ///////////////////////////////
 abstract class Action
 {	
-	Action()
-	{
-		is_strenuous = false;
-	}
+	Action(){}
 	
+	public boolean can_be_done(){return true;}
 	public void What_Happens(){}
 	public String description;
-	public boolean is_strenuous;
 }
 
 
@@ -784,14 +814,14 @@ abstract class Location
 {
 	Location()
 	{
-		who_is_here = new LinkedList<Person>();
+		who_is_here = new Vector<Person>();
 		options = new Vector<Action>();
 	}
 	
 	public Location(String name)
 	{
 		
-		who_is_here = new LinkedList<Person>();
+		who_is_here = new Vector<Person>();
 		options = new Vector<Action>();
 		Loc_name = name;
 		accessibility = 0;
@@ -817,7 +847,7 @@ abstract class Location
 		who_is_here.add(arrival);
 	}
 	
-	public LinkedList<Person> GetEveryone()
+	public Vector<Person> GetEveryone()
 	{
 		return who_is_here;
 	}
@@ -832,10 +862,24 @@ abstract class Location
 		return Loc_name;
 	}
 	
+	public boolean has_present(String name)
+	{
+		for(int x=0; x<who_is_here.size(); x++)
+		{
+			if(who_is_here.get(x).Get_Name().equals(name))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	private String Loc_name;
 	protected Vector<Action> options;
-	protected LinkedList<Person> who_is_here;
+	protected Vector<Person> who_is_here;
 	protected int accessibility; //lower is easier
+	
 }
 
 
@@ -1047,10 +1091,6 @@ abstract class consumable_item extends item
 }
 
 
-
-
-
-
 //////////////////////////////
 
 class mobility_controller
@@ -1101,65 +1141,4 @@ class mobility_controller
 	
 	private ArrayList<mobility_score> mobility;	
 
-}
-//////////////////////////////
-class helpers
-{
-	helpers(Player_Character hero)
-	{
-		PC = hero;
-		IO = new Frame_IO_Object();
-	}
-	
-	//Assumption: We've already output a question with 'size' number of choices
-	//Yells at the player until they give a viable option (one from the list)
-	static int which_one(int size)
-	{
-		int x = Integer.parseInt(IO.Input_String());
-	
-		while(x > size || x < 1)
-		{
-			helpers.output("That's not a selectable option. Try again");
-			helpers.finish_output();
-			x = Integer.parseInt(IO.Input_String());
-		}
-	
-		return x - 1;
-	}
-	
-	static String input()
-	{
-		return IO.Input_String();
-	}
-	
-	static void output(String the_output)
-	{
-		IO.Output_String(the_output);
-	}
-	
-	static void finish_output()
-	{
-		IO.Output_String("");
-		IO.Output_Batch();
-	}
-	
-	static Player_Character get_PC()
-	{
-		return PC;
-	}
-	
-	//inclusive
-	static int random(int min, int max)
-	{
-		Random random = new Random();
-		return random.nextInt(max-min+1)+min;
-	}
-	
-	static Player_Character PC;
-	static IO_Object IO;
-}
-
-enum equip_region
-{
-	head, body, ring, amulet, one_handed, two_handed, not_equippable
 }
