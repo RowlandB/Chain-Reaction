@@ -40,7 +40,12 @@ class Frame_IO_Object extends IO_Object
 		display.setText("test string");
 		
 			GridBagConstraints GBC = new GridBagConstraints();
+			GBC.fill = GridBagConstraints.BOTH;
+			
+			GBC.weightx = 5.0;
+			GBC.weighty = 5.0;
 			GBC.gridwidth = GridBagConstraints.REMAINDER;
+
 
 		frame.getContentPane().add(display, GBC);
 		
@@ -48,7 +53,9 @@ class Frame_IO_Object extends IO_Object
 		TextField input = new TextField();
 		input.setPreferredSize(new Dimension(400,50));
 		input.setEditable(true);
-
+		
+		GBC.weightx = 1.0;
+		GBC.weighty = 1.0;
 		frame.getContentPane().add(input, GBC);
 		
 		
@@ -64,10 +71,10 @@ class Frame_IO_Object extends IO_Object
 				}
 			}});
 		
-			
-		GBC.anchor = GridBagConstraints.EAST;
-		GBC.gridwidth = GridBagConstraints.RELATIVE;
-		frame.getContentPane().add(button, GBC);
+		GridBagConstraints GBC2 = new GridBagConstraints();
+		GBC2.anchor = GridBagConstraints.EAST;
+		GBC2.gridwidth = GridBagConstraints.RELATIVE;
+		frame.getContentPane().add(button, GBC2);
 		frame.getRootPane().setDefaultButton(button);
 		
 		
@@ -80,8 +87,8 @@ class Frame_IO_Object extends IO_Object
 				current_output_text="";
 			}});
 		
-		GBC.gridwidth = GridBagConstraints.REMAINDER;
-		frame.add(clear_button, GBC);
+		GBC2.gridwidth = GridBagConstraints.REMAINDER;
+		frame.add(clear_button, GBC2);
 	
 		frame.pack();
 		frame.setLocationRelativeTo(null);

@@ -262,6 +262,3 @@ abstract class Noble extends Person
 	}
 	
 }
-
-
-

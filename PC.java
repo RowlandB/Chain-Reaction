@@ -133,9 +133,9 @@ class Player_Character
 			
 			int y=1;
 			ArrayList<Location> potential_places = new ArrayList<Location>();
-			for(int x = 0; x<Main.places.size(); x++)
+			for(int x = 0; x<helpers.Location_List.size(); x++)
 			{
-				Location place = Main.places.get(x);
+				Location place = helpers.Location_List.get(x);
 				
 				
 				if(place.can_individual_visit(location_knowledge.get_score(place.Where())))
