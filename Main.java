@@ -35,7 +35,7 @@ class My_Game_Initializer extends Game_Initializer
 			
 			//TODO: initialize all the NPCs
 			////Persons
-			Person Generic_Peasant = new Bob(Bobs_Fields);
+			Person Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
 			Bobs_Fields.AddPerson(Generic_Peasant);
 			NPCs.add(Generic_Peasant);
 			
@@ -60,9 +60,11 @@ class My_Game_Initializer extends Game_Initializer
 
 class Bob extends Commoner
 {
-	Bob(Location L)
+	Bob(Location L, Location new_home)
 	{
 		super(L,"Bob");
+		
+		home = new_home;
 		//TODO: add some knowledge so that it doesn't error
 		
 		//proof-of-concept, shows we can make actions that change our actions
@@ -84,6 +86,22 @@ class Bob extends Commoner
 	
 		this.potential_actions.add(new become_single_minded());
 		*/
+		
+		class steal_wine extends NPC_Action
+		{
+			steal_wine()
+			{
+				description = " does nothing suspicious";
+				likelihood = 1;
+			}
+			
+			public void What_Happens()
+			{
+				//TODO actually do it
+			}
+			
+		}
+		
 		personal_greeting = "'allo, govna'";
 	}
 	

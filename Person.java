@@ -1,6 +1,6 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Vector;
+
 
 abstract class  Person
 {
@@ -8,6 +8,8 @@ abstract class  Person
 	Person(Location L, String S)
 	{
 		place = L;
+		home = L;
+		work = L;
 		name = S;
 
 		knowledge_base = new Vector<Fact>();
@@ -31,6 +33,11 @@ abstract class  Person
 		place.RemovePerson(this);
 		place = new_place;
 		new_place.AddPerson(this);
+	}
+	
+	Location Get_Home()
+	{
+		return home;
 	}
 	
 	/**Non-Terminating Simple Action
@@ -153,7 +160,7 @@ abstract class  Person
 			//notify player
 		if(helpers.get_PC().Get_Location().Where() == this.place.Where())
 		{
-			helpers.output(the_action.description);
+			helpers.output(name + the_action.description);
 		}
 		
 	}
@@ -163,10 +170,10 @@ abstract class  Person
 		int action_location = 0;
 		int action_value = -1000;
 		for(int x=0; x<potential_actions.size(); x++)
-		{		
-			if(potential_actions.get(x).likelihood + helpers.random(-5, 5) > action_value)
+		{
+			if(potential_actions.get(x).how_likely() + helpers.random(-5, 5) > action_value)
 			{
-				action_value = potential_actions.get(x).likelihood;
+				action_value = potential_actions.get(x).how_likely();
 				action_location = x;
 			}
 		}
@@ -207,6 +214,10 @@ abstract class  Person
 	
 	class NPC_Action extends Action
 	{
+		protected int how_likely()
+		{
+			return likelihood;
+		}
 		
 		protected int likelihood;
 	}
@@ -215,9 +226,8 @@ abstract class  Person
 	{
 		does_nothing()
 		{
-			String name = Get_Name();
-			description =  name + " does nothing";
-			likelihood = 5;
+			description =  " does nothing";
+			likelihood = 1;
 		}
 		
 		public void What_Happens()
@@ -229,9 +239,10 @@ abstract class  Person
 	/////////////////////////////
 	protected enum Mood
 	{
-	happy, sad, angry, ambivalent
+		happy, sad, angry, ambivalent
 	}
 	
+	protected Location home;
 	protected String personal_greeting;
 	protected Mood mood;
 	protected int pc_friendlyness_level; //0 = neutral, bigger is friendlier
@@ -239,6 +250,7 @@ abstract class  Person
 	protected  int fight_power;
 	protected String name;
 	protected Location place;
+	protected Location work;
 	protected ArrayList<NPC_Action> potential_actions;
 	protected mobility_controller location_knowledge;
 }
@@ -249,6 +261,84 @@ abstract class Commoner extends Person
 	{
 		super(Start, their_name);
 		mood = Mood.angry;
+		
+		potential_actions.add(new go_home());
+		potential_actions.add(new go_to_work());
+	}
+	
+	class go_home extends NPC_Action
+	{
+		go_home()
+		{
+			String name = Get_Name();
+			description = " comes home";
+		}
+		
+		protected int How_Likely()
+		{
+			if(place.equals(home))
+			{
+				return -1000;
+			}
+			
+			int t = helpers.Get_Time();
+			if(t > 6 && t < 18)
+			{
+				return -5;
+			}
+			else
+			{
+				return 5;
+			}
+		}
+		
+		public void What_Happens()
+		{
+			if(helpers.get_PC().Get_Location().equals(place))
+			{
+				helpers.output(name + " goes home");				
+			}
+			
+			MoveTo(Get_Home());
+		}
+	}
+	
+	class go_to_work extends NPC_Action
+	{
+		go_to_work()
+		{
+			description = " comes to work";
+		}
+		
+		protected int How_Likely()
+		{
+			if(place.equals(work))
+			{
+				return -1000;
+			}
+			
+			int t = helpers.Get_Time();
+			if(t < 6 && t > 18)
+			{
+				return -5;
+			}
+			else
+			{
+				return 5;
+			}
+		}
+		
+		public void What_Happens()
+		{
+			if(helpers.get_PC().Get_Location().equals(work))
+			{
+				helpers.output(name + " goes to work");				
+			}
+			
+			MoveTo(work);
+		}
+
+		
 	}
 	
 }

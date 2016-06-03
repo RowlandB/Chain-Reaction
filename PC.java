@@ -10,19 +10,19 @@ class Player_Character
 	public  Player_Character(Location Start)
 	{
 		this.my_inventory = new Inventory();
-		
+
+//note: the commented-out items are POC items. They can be ignored
 		my_inventory.add_new_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
-		my_inventory.add_new_item(new item());
+//		my_inventory.add_new_item(new item());
 		my_inventory.add_new_item(new health_potion());
-		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
-		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
-		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
+//		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
+//		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
+//		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
 		
 		this.my_knowledge = new Knowledge();
 		
 		this.what_do = new Vector<Action>(0);
 
-		what_do.add(new LookAroundtheRoom());
 		what_do.add(new Move());
 		what_do.add(new Chat());
 		what_do.add(new ExamineInventory());
@@ -51,6 +51,8 @@ class Player_Character
 	{
 		Vector<Action> potential_actions = Get_Viable_Actions();
 		
+		helpers.output("");
+		helpers.output("Time: " + String.valueOf(helpers.Get_Time()));
 		helpers.output("What would you like to do?");
 		for(int x=0; x<potential_actions.size(); x++)
 		{
@@ -88,36 +90,6 @@ class Player_Character
 		}
 		
 		return potentials;
-	}
-	
-	class LookAroundtheRoom extends Action
-	{
-		LookAroundtheRoom()
-		{
-			description = "Check out who's near";
-		}
-		
-		public void What_Happens()
-		{
-			String people;
-			Vector<Person> everyone =  here.GetEveryone();
-			if(everyone.size() == 0)
-			{
-				people = "There's no one here but you!";
-				helpers.output(people);
-				helpers.finish_output();
-			}
-			else
-			{
-				helpers.output("Present is:");
-				for(int x = 0; x <everyone.size(); x++)
-				{
-					helpers.output(everyone.get(x).Get_Name());
-				}
-				helpers.finish_output();
-			}
-
-		}		
 	}
 	
 	class Move extends Action

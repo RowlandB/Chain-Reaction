@@ -1,3 +1,4 @@
+import java.security.InvalidParameterException;
 import java.util.Random;
 import java.util.Vector;
 
@@ -20,8 +21,6 @@ abstract public class Game_Initializer
 		
 		this.Initialize(places, NPCs);
 		
-		int time_of_day = 0;
-		
 		Player_Character The_Player = this.new_Player();
 		
 		new helpers(The_Player, places, NPCs);
@@ -31,11 +30,8 @@ abstract public class Game_Initializer
 			The_Player.InteractWithEnvironment();
 			for(int x = 0; x < NPCs.size(); x++)
 				NPCs.get(x).Act();
-			time_of_day++;
-			if(time_of_day>23)
-			{
-				time_of_day=time_of_day-24;
-			}
+			
+			helpers.increment_time();
 		}
 	}
 }
@@ -45,10 +41,25 @@ class helpers
 {
 	helpers(Player_Character hero, Vector<Location> places, Vector<Person> NPCs)
 	{
+		time_of_day=12;
 		PC = hero;
 		IO = new Frame_IO_Object();
 		NPC_List = NPCs;
 		Location_List = places;
+	}
+	
+	public static void increment_time()
+	{
+		time_of_day++;
+		if(time_of_day>23)
+		{
+			time_of_day=time_of_day-24;
+		}
+	}
+
+	public static int Get_Time()
+	{
+		return time_of_day;
 	}
 	
 	//Assumption: We've already output a question with 'size' number of choices
@@ -100,13 +111,26 @@ class helpers
 	//return Location_List;
 	//}
 	
+	static Location Get_Location_by_name(String Location_Name) throws InvalidParameterException
+	{
+		for(int x=0; x<Location_List.size(); x++)
+		{
+			if(Location_List.get(x).Where().equals(Location_Name))
+			{
+				return Location_List.get(x);
+			}
+		}
+		
+		throw new InvalidParameterException();
+	}
+	
 	static Person Get_Person_by_name(String NPC_name)
 	{
 		for(int x=0; x<NPC_List.size(); x++)
 		{
 			if(NPC_List.get(x).Get_Name().equals(NPC_name))
 			{
-			return NPC_List.get(x);
+				return NPC_List.get(x);
 			}
 		}
 	
@@ -115,6 +139,7 @@ class helpers
 			return new null_person();
 		}
 		
+		private static int time_of_day;
 		static Player_Character PC;
 		static IO_Object IO;
 		static Vector<Location> Location_List;
@@ -134,3 +159,4 @@ class helpers
 			super(new Start_Location(), "null");
 		}
 	}
+	
