@@ -84,7 +84,14 @@ abstract class  Person
 				{
 					
 				}
-*/				
+				
+				//TODO: check if it's in the PC's knowledge base
+				if()
+				{
+					
+				}
+				
+*/
 				String output = Integer.toString(y) + ") " + knowledge_base.get(x).Get_Description();
 				helpers.output(output);
 			}
@@ -270,25 +277,25 @@ abstract class Commoner extends Person
 	{
 		go_home()
 		{
-			String name = Get_Name();
 			description = " comes home";
+			likelihood = 7;
 		}
 		
-		protected int How_Likely()
+		protected int how_likely()
 		{
 			if(place.equals(home))
 			{
-				return -1000;
+				return -10000;
 			}
 			
 			int t = helpers.Get_Time();
 			if(t > 6 && t < 18)
 			{
-				return -5;
+				return (-1 * likelihood);
 			}
 			else
 			{
-				return 5;
+				return likelihood;
 			}
 		}
 		
@@ -308,31 +315,32 @@ abstract class Commoner extends Person
 		go_to_work()
 		{
 			description = " comes to work";
+			likelihood = 7;
 		}
 		
-		protected int How_Likely()
+		protected int how_likely()
 		{
 			if(place.equals(work))
 			{
-				return -1000;
+				return -10000;
 			}
 			
 			int t = helpers.Get_Time();
-			if(t < 6 && t > 18)
+			if(t < 6 || t > 18)
 			{
-				return -5;
+				return (-1 * likelihood);
 			}
 			else
 			{
-				return 5;
+				return likelihood;
 			}
 		}
 		
 		public void What_Happens()
 		{
-			if(helpers.get_PC().Get_Location().equals(work))
+			if(helpers.get_PC().Get_Location().equals(place))
 			{
-				helpers.output(name + " goes to work");				
+				helpers.output(name + " goes to work");			
 			}
 			
 			MoveTo(work);

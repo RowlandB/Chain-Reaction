@@ -87,6 +87,7 @@ class Bob extends Commoner
 		this.potential_actions.add(new become_single_minded());
 		*/
 		
+		
 		class steal_wine extends NPC_Action
 		{
 			steal_wine()
@@ -95,12 +96,26 @@ class Bob extends Commoner
 				likelihood = 1;
 			}
 			
+			protected int how_likely()
+			{
+				if(helpers.get_PC().Get_Location().equals(place) && helpers.get_PC().has_item("wine"))
+				{
+					return likelihood;
+				}
+				else
+				{
+					return -1000;
+				}
+			}
+			
 			public void What_Happens()
 			{
-				//TODO actually do it
+				helpers.get_PC().steal("wine");
 			}
 			
 		}
+		
+		this.potential_actions.add(new steal_wine());
 		
 		personal_greeting = "'allo, govna'";
 	}

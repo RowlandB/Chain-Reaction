@@ -285,6 +285,16 @@ class Player_Character
 		new_fact.on_learn();
 	}
 	
+	public void steal(String item_name)
+	{
+		my_inventory.remove_item(my_inventory.check_item(item_name), 1);		
+	}
+	
+	public void steal(item item)
+	{
+		my_inventory.remove_item(item, 1);		
+	}
+	
 	public void decrement_consumable(item consume)
 	{
 		my_inventory.remove_item(consume, 1);
@@ -445,7 +455,7 @@ class Player_Character
 		
 		public void remove_item(int which, int how_many)
 		{
-			if(the_items.get(which).have_more_than(how_many))
+			if(the_items.get(which).get_count() > how_many)
 			{
 				remove_some_of_item(which, how_many);
 				
@@ -715,7 +725,6 @@ class Player_Character
 	private int current_hp;
 	private mobility_controller location_knowledge;
 	
-	
 }
 
 ///////////////////////////////
@@ -922,11 +931,6 @@ class item
 	public int get_count()
 	{
 		return quantity;
-	}
-	
-	public boolean have_more_than(int check_number)
-	{
-		return (check_number > this.quantity);
 	}
 	
 	
