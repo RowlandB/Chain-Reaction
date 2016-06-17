@@ -110,7 +110,7 @@ class Bob extends Commoner
 			
 			public void What_Happens()
 			{
-				helpers.get_PC().steal("wine");
+				helpers.get_PC().steal(new wine());
 			}
 			
 		}
@@ -390,7 +390,7 @@ class wine extends consumable_item
 
 		protected void Other_Happenings()
 		{
-			// TODO assume the character is a beastly god among men who can't get drunk
+			helpers.get_PC().add_drunkeness(5);
 		}
 	}
 }

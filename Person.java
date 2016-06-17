@@ -92,8 +92,7 @@ abstract class  Person
 				}
 				
 */
-				String output = Integer.toString(y) + ") " + knowledge_base.get(x).Get_Description();
-				helpers.output(output);
+				helpers.output_partial_list(y, knowledge_base.get(x).Get_Description());
 			}
 			helpers.finish_output();
 			

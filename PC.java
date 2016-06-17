@@ -39,6 +39,7 @@ class Player_Character
 		this.here = Start;
 		this.current_hp = 100;
 		this.total_hp = 100;
+		this.drunk = 0;
 	}
 	
 	public void add_action(Action new_action)
@@ -49,6 +50,9 @@ class Player_Character
 	//displays at all the actions the player can do
 	public void InteractWithEnvironment()
 	{
+		
+		this.time_passes();
+		
 		Vector<Action> potential_actions = Get_Viable_Actions();
 		
 		helpers.output("");
@@ -56,7 +60,7 @@ class Player_Character
 		helpers.output("What would you like to do?");
 		for(int x=0; x<potential_actions.size(); x++)
 		{
-			helpers.output(String.valueOf(x+1) + ") " + potential_actions.get(x).description);
+			helpers.output_partial_list(x+1, potential_actions.get(x).description);
 		}
 		helpers.finish_output();
 
@@ -109,12 +113,10 @@ class Player_Character
 			{
 				Location place = helpers.Location_List.get(x);
 				
-				
 				if(place.can_individual_visit(location_knowledge.get_score(place.Where())))
 				{
 					potential_places.add(place);
-					String output = y + ") " + place.Where();
-					helpers.output(output);
+					helpers.output_partial_list(y, place.Where());
 					y++;
 				}
 			}
@@ -149,9 +151,7 @@ class Player_Character
 				helpers.output("With whom would you like to speak ?");
 				for(int x = 0; x <everyone.size(); x++)
 				{
-					int y = x +1;
-					String output = Integer.toString(y) + ") " + everyone.get(x).Get_Name();
-					helpers.output(output);
+					helpers.output_partial_list(x+1, everyone.get(x).Get_Name());
 				}
 				helpers.finish_output();
 				
@@ -185,10 +185,10 @@ class Player_Character
 			//options
 			while(answer != 4)
 			{
-				helpers.output("1) View Inventory");
-				helpers.output("2) Use an Item");
-				helpers.output("3) Equip an Item");
-				helpers.output("4) Done");
+				helpers.output_partial_list(1, "View Inventory");
+				helpers.output_partial_list(2, "Use an Item");
+				helpers.output_partial_list(3, "Equip an Item");
+				helpers.output_partial_list(4, "Done");
 				helpers.finish_output();
 			
 				answer = helpers.which_one(4) + 1;
@@ -252,6 +252,12 @@ class Player_Character
 		
 	}
 	
+	/*
+	public void gain_item(item which)
+	{
+		
+	}*/
+	
 	public void remove_action(Action one_to_remove)
 	{
 		what_do.remove(one_to_remove);
@@ -259,6 +265,11 @@ class Player_Character
 	
 	
 	//////
+	
+	public void add_drunkeness(int how_long)
+	{
+		drunk = drunk + how_long;
+	}
 	
 	public boolean Player_is_Weak()
 	{
@@ -270,12 +281,28 @@ class Player_Character
 		here = where_to;
 	}
 	
+	private void time_passes()
+	{
+		if(drunk > 0)
+		{
+			drunk--;
+		}
+	}
+	
 	////////////////
 	
 	
+	public Location Get_Location()
+	{
+		return this.here;
+	}
+	
 	public void gain_health(int how_much)
 	{
-		
+		if(current_hp + how_much > total_hp)
+		{
+			current_hp = total_hp;
+		}
 	}
 	
 	public void add_fact(Fact new_fact)
@@ -285,14 +312,9 @@ class Player_Character
 		new_fact.on_learn();
 	}
 	
-	public void steal(String item_name)
-	{
-		my_inventory.remove_item(my_inventory.check_item(item_name), 1);		
-	}
-	
 	public void steal(item item)
 	{
-		my_inventory.remove_item(item, 1);		
+		my_inventory.remove_item(my_inventory.check_item(item.get_name()), 1);		
 	}
 	
 	public void decrement_consumable(item consume)
@@ -303,11 +325,6 @@ class Player_Character
 	public void decrement_consumable(String consume)
 	{	
 		my_inventory.remove_item(my_inventory.check_item(consume), 1);
-	}
-	
-	public Location Get_Location()
-	{
-		return this.here;
 	}
 	
 	public void learn_about_location(String location_name, int how_much)
@@ -391,7 +408,7 @@ class Player_Character
 		{
 			for(int x=1; x <= the_items.size(); x++)
 			{
-				helpers.output(Integer.toString(x) + ") " + the_items.get(x-1).get_name());
+				helpers.output_partial_list(x, the_items.get(x-1).get_name());
 			}
 		
 			helpers.finish_output();
@@ -405,7 +422,7 @@ class Player_Character
 		{
 			for(int x=1; x <= the_items.size(); x++)
 			{
-				helpers.output(Integer.toString(x) + ") " + the_items.get(x-1).get_name());
+				helpers.output_partial_list(x, the_items.get(x-1).get_name());
 			}
 		
 			helpers.finish_output();
@@ -724,6 +741,7 @@ class Player_Character
 	private int total_hp;
 	private int current_hp;
 	private mobility_controller location_knowledge;
+	private int drunk;
 	
 }
 

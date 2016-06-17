@@ -88,6 +88,11 @@ class helpers
 		IO.Output_String(the_output);
 	}
 	
+	static void output_partial_list(int which, String output)
+	{
+		IO.Partial_List_Output_String(which, output);
+	}
+	
 	static void finish_output()
 	{
 		IO.Output_String("");
