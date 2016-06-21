@@ -204,10 +204,17 @@ class Tavern extends Location
 	Tavern(String name)
 	{
 		super(name);
-		options.add(new steal_wine());
+		
+		wine blarg = new wine();
+		blarg.set_stolen(true);
+		blarg.set_count(10000);
+		
+		unattended_stuff.add(blarg);
+		
+//		options.add(new steal_wine());
 	}
 	
-	class steal_wine extends Action
+/*	class steal_wine extends Action
 	{
 		steal_wine()
 		{
@@ -218,9 +225,9 @@ class Tavern extends Location
 		{
 			helpers.get_PC().add_item(new wine());
 		}
-		
+	
 		//TODO add a can_be_done based on a new PC mechanic 'stealth'
-	}
+	}*/
 }
 
 
@@ -261,8 +268,15 @@ class Dungeon extends Location
 	{
 		super(name);
 		accessibility = 20;
+		
+		torch blarg = new torch();
+		
+		
+		unattended_stuff.add(blarg);
 	}
-
+	
+	
+	
 }
 
 class health_potion extends consumable_item
@@ -391,6 +405,72 @@ class wine extends consumable_item
 		protected void Other_Happenings()
 		{
 			helpers.get_PC().add_drunkeness(5);
+		}
+	}
+}
+
+class torch extends consumable_item
+{
+	torch()
+	{
+		ability = new burn();
+		rules_description = ability.description;
+
+		name = "torch";
+		flavor_text = "it's for lighting things on fire";
+		weight = 1;
+		value = 1;
+	}
+	
+	class burn extends consume
+	{
+		burn()
+		{
+			description = "light torch so you can burn things";
+		}
+		
+		protected void Other_Happenings()
+		{
+			class Burn_Building extends Action
+			{
+				Burn_Building()
+				{
+					description = "light a building on fire";
+				}
+				
+				public String Get_Description()
+				{
+					return "Light " + helpers.get_PC().Get_Location().Where() + " on fire";
+				}
+				
+				@Override
+				public void What_Happens()
+				{
+					Location here = helpers.get_PC().Get_Location();
+					here.set_name("Burned Remains of " + here.Where());
+					
+					helpers.get_PC().remove_action(this);
+				}
+			}
+			
+			class Burn_Item extends Action
+			{
+				public Burn_Item()
+				{
+					description = "Light an item on fire";
+				}
+				
+				@Override
+				public void What_Happens()
+				{
+					// TODO Auto-generated method stub
+					
+					helpers.get_PC().remove_action(this);
+				}
+			}
+			
+			helpers.get_PC().add_action(new Burn_Building());
+			helpers.get_PC().add_action(new Burn_Item());
 		}
 	}
 }

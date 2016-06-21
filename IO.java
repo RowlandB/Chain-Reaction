@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -7,6 +8,7 @@ import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Scanner;
+import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -29,6 +31,11 @@ abstract class IO_Object
 	{
 		Output_String(Integer.toString(which) + ") " + Output);
 	}
+
+	public void Partial_List_Output_String(int which, String Output, boolean b)
+	{
+		Output_String(Integer.toString(which) + ") " + Output);
+	}
 }
 
 //uses JFrame + Buttons
@@ -42,7 +49,7 @@ class Frame_Button_IO_Object extends IO_Object
 		frame.setLayout(new GridBagLayout());
 		
 		TextArea header = new TextArea();
-		header.setPreferredSize(new Dimension(100,50));
+		header.setPreferredSize(new Dimension(100,200));
 		header.setEditable(false);
 		header.setText("test string");
 		
@@ -55,8 +62,9 @@ class Frame_Button_IO_Object extends IO_Object
 		
 		frame.getContentPane().add(header, GBC);
 		
-		Container button_spot = new Box(BoxLayout.X_AXIS);
+		Container button_spot = Box.createVerticalBox();
 		button_spot.setPreferredSize(new Dimension(600, 300));
+//		button_spot.add(Box.createVerticalGlue());
 		
 			GBC.weightx = 10.0;
 			GBC.weighty = 10.0;
@@ -64,12 +72,38 @@ class Frame_Button_IO_Object extends IO_Object
 
 		frame.getContentPane().add(button_spot, GBC);
 		
+		//TODO: push this to another function so it doesn't clutter things up
+		TextField input = new TextField();
+		input.setPreferredSize(new Dimension(400,50));
+		input.setEditable(true);
+		
+		GBC.weightx = 1.0;
+		GBC.weighty = 1.0;
+		frame.getContentPane().add(input, GBC);
+		
+		Input_Field = input;
+		
+		JButton OK = new JButton("OK");
+		OK.setPreferredSize(new Dimension(60,50));
+		OK.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				if(!Input_Field.getText().equals(""))
+				{
+					ready_for_input=true;
+				}
+			}});
+		
+		frame.add(OK);
+		
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		
 		header_text = header;
 		button_holder = button_spot;
+		button_list = new Vector<JButton>();
+		previous_output = "";
 	}
 	
 	public String Input_String()
@@ -82,23 +116,54 @@ class Frame_Button_IO_Object extends IO_Object
 			} catch(InterruptedException ex) {
 			    Thread.currentThread().interrupt();
 			}
-		}	
-		//TODO change all this to INTs
-		return Integer.toString(future_return);
+		}
+		
+		if(button_list.size()==0)
+		{
+			return Input_Field.getText();
+		}
+		else
+		{
+			Delete_All_Buttons();
+			previous_output = "";
+			
+			//TODO change all this to INTs
+			return Integer.toString(future_return);
+		}
 	}
 	
 	public void Output_String(String output)
 	{
+		previous_output = previous_output + output + "\n";
+		
 		//TODO shouldn't be called, assume it's a header
-		header_text.setText(output);
+		header_text.setText(previous_output);
+		
+		//header_text.setCaretPosition(output.length());
+		log = log + output;
+	}
+	
+	private void Delete_All_Buttons()
+	{
+		for(int x=0; x<button_list.size(); x++)
+		{
+			button_holder.remove(button_list.get(x));
+		}
+		button_list.removeAllElements();
 	}
 	
 	public void Output_Batch()
 	{
+		button_holder.revalidate();
 		button_holder.repaint();
 	}
 	
 	public void Partial_List_Output_String(int which, String Output)
+	{
+		Partial_List_Output_String(which, Output, false);
+	}
+	
+	public void Partial_List_Output_String(int which, String Output, boolean red_text)
 	{
 		JButton potential_option = new JButton();
 		potential_option.setText(Integer.toString(which) + ") " + Output);
@@ -109,20 +174,25 @@ class Frame_Button_IO_Object extends IO_Object
 				ready_for_input = true;
 			}});
 		
+		if(red_text)
+		{
+			potential_option.setForeground(Color.RED);
+		}
 		
-		GridBagConstraints GBC = new GridBagConstraints();
-		GBC.gridwidth = GridBagConstraints.REMAINDER;
-		
-		button_holder.add(potential_option, GBC);
+		button_holder.add(potential_option);
+		button_list.add(potential_option);
 		
 		log = log + Integer.toString(which) + ") " + Output;
 	}
 	
+	Vector<JButton> button_list;
 	boolean ready_for_input;	
 	private String log;
 	TextArea header_text;
 	Container button_holder;
 	int future_return;
+	String previous_output;
+	TextField Input_Field;
 }
 
 //uses JFrames

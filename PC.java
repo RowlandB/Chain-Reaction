@@ -55,12 +55,12 @@ class Player_Character
 		
 		Vector<Action> potential_actions = Get_Viable_Actions();
 		
-		helpers.output("");
+		//helpers.output("");
 		helpers.output("Time: " + String.valueOf(helpers.Get_Time()));
 		helpers.output("What would you like to do?");
 		for(int x=0; x<potential_actions.size(); x++)
 		{
-			helpers.output_partial_list(x+1, potential_actions.get(x).description);
+			helpers.output_partial_list(x+1, potential_actions.get(x).Get_Description());
 		}
 		helpers.finish_output();
 
@@ -724,13 +724,6 @@ class Player_Character
 		private ArrayList<Fact> the_Facts;
 	}
 	
-	
-//////////////////////////////////////	
-	//TODO: wrap all this in a class so it can be here and in Person
-	
-	
-	
-	
 //////////////////////////////////////
 
 	private String name;
@@ -797,6 +790,8 @@ abstract class Action
 {	
 	Action(){}
 	
+	public String Get_Description(){return description;}
+	
 	public boolean can_be_done(){return true;}
 	public void What_Happens(){}
 	public String description;
@@ -815,6 +810,9 @@ abstract class Location
 	{
 		who_is_here = new Vector<Person>();
 		options = new Vector<Action>();
+
+		options.add(new Search());
+		unattended_stuff = new Vector<item>();
 	}
 	
 	public Location(String name)
@@ -824,6 +822,9 @@ abstract class Location
 		options = new Vector<Action>();
 		Loc_name = name;
 		accessibility = 0;
+		unattended_stuff = new Vector<item>();
+
+		options.add(new Search());
 	}
 	
 	public boolean can_individual_visit(int mobility)
@@ -861,6 +862,11 @@ abstract class Location
 		return Loc_name;
 	}
 	
+	public void set_name(String new_name)
+	{
+		Loc_name = new_name;
+	}
+	
 	public boolean has_present(String name)
 	{
 		for(int x=0; x<who_is_here.size(); x++)
@@ -874,10 +880,68 @@ abstract class Location
 		return false;
 	}
 	
+	class Search extends Action
+	{
+		Search()
+		{
+			description = "Search the area";
+		}
+		
+		@Override
+		public void What_Happens()
+		{
+			if(unattended_stuff.size()==0)
+			{
+				helpers.output("You find nothing");
+			}
+			else
+			{
+				helpers.output("You find:");
+				for(int x=0; x<unattended_stuff.size(); x++)
+				{
+					if(unattended_stuff.get(x).get_stolen())
+					{
+						helpers.output_partial_list(x+1, unattended_stuff.get(x).get_name() + " (" + Integer.toString(unattended_stuff.get(x).get_count()) + ")", true);
+					}
+					else
+					{
+						helpers.output_partial_list(x+1, unattended_stuff.get(x).get_name() + " (" + Integer.toString(unattended_stuff.get(x).get_count()) + ")");
+					}
+				}
+				helpers.output("What would you like to take?");
+				helpers.finish_output();
+				
+				int which = helpers.which_one(unattended_stuff.size());
+				
+				helpers.output("How many?");
+
+				int how_many = helpers.which_one(10000) +1; //adding 1 because of how which_one is coded
+				
+				item blarg = new item();
+				blarg = unattended_stuff.get(which);
+				blarg.set_count(how_many);
+				
+				helpers.get_PC().add_item(blarg);
+				
+				if(unattended_stuff.get(which).get_count() > how_many)
+				{
+					unattended_stuff.get(which).set_count(unattended_stuff.get(which).get_count() - how_many);
+				}
+				else
+				{
+					unattended_stuff.remove(which);
+				}
+				
+				
+			}
+		}
+	}
+	
 	private String Loc_name;
 	protected Vector<Action> options;
 	protected Vector<Person> who_is_here;
 	protected int accessibility; //lower is easier
+	protected Vector<item> unattended_stuff;
 	
 }
 
@@ -902,6 +966,21 @@ class item
 		quantity=1;
 	}
 	
+	public boolean get_stolen()
+	{
+		return stolen;
+	}
+	
+	public void set_stolen(boolean is_stolen)
+	{
+		stolen = is_stolen;
+	}
+	
+	public void set_count(int how_many)
+	{
+		quantity = how_many;
+	}
+
 	class Nothing extends Action
 	{
 		Nothing()

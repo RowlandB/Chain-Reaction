@@ -43,7 +43,7 @@ class helpers
 	{
 		time_of_day=12;
 		PC = hero;
-		IO = new Frame_IO_Object();
+		IO = new Frame_Button_IO_Object();
 		NPC_List = NPCs;
 		Location_List = places;
 	}
@@ -91,6 +91,11 @@ class helpers
 	static void output_partial_list(int which, String output)
 	{
 		IO.Partial_List_Output_String(which, output);
+	}
+	
+	public static void output_partial_list(int which, String output, boolean stolen)
+	{
+		IO.Partial_List_Output_String(which, output, stolen);
 	}
 	
 	static void finish_output()
@@ -149,6 +154,7 @@ class helpers
 		static IO_Object IO;
 		static Vector<Location> Location_List;
 		static Vector<Person> NPC_List;
+		
 	}
 	
 	enum equip_region
