@@ -75,38 +75,34 @@ abstract class  Person
 		
 		while(stay && still_talking)
 		{
+			Vector<Fact> sharable_facts = new Vector<Fact>();
+			int y = 1;
 			for(int x = 0; x < knowledge_base.size(); x++)
 			{
-				int y = x + 1;
-				//TODO: check if the NPC would share this
-				
-/*				if(knowledge_base.get(x).is_sharable())
+				if(!helpers.get_PC().knows_fact(knowledge_base.get(x).Get_id()))
 				{
-					
-				}
-				
-				//TODO: check if it's in the PC's knowledge base
-				if()
-				{
-					
-				}
-				
-*/
-				helpers.output_partial_list(y, knowledge_base.get(x).Get_Description());
+					//TODO: check if the NPC would share this
+			//		if(knowledge_base.get(x).is_sharable())
+			//		{
+						sharable_facts.add(knowledge_base.get(x));
+						helpers.output_partial_list(y, knowledge_base.get(x).Get_Description());
+						y++;
+			//		}	
+				}				
 			}
 			helpers.finish_output();
 			
-			int answer = helpers.which_one(knowledge_base.size());
+			int answer = helpers.which_one(y);
 			
-			if(knowledge_base.get(answer).Get_Description()=="done")
+			if(sharable_facts.get(answer).Get_Description()=="done")
 			{
 				still_talking = false;
 			}
 			else
 			{
 				
-				helpers.output(knowledge_base.get(answer).Get_Fact());
-				helpers.get_PC().add_fact(knowledge_base.get(answer));
+				helpers.output(sharable_facts.get(answer).Get_Fact());
+				helpers.get_PC().add_fact(sharable_facts.get(answer));
 			}
 		}
 		//TODO maybe do something depending on how character feels about him
@@ -196,7 +192,7 @@ abstract class  Person
 		}
 		else if(how_bad > 5)
 		{
-			//TODO: a bit fucked up
+			//TODO: a bit messed up
 			
 		}
 		else

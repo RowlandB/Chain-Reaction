@@ -29,10 +29,6 @@ class Player_Character
 		what_do.add(new Ruminate());
 		what_do.add(new DoNothing());
 		
-		//TODO: initilize each Action
-		
-		//use item in inventory
-		
 		this.location_knowledge = new mobility_controller();
 		
 		this.name = "Jon Snow";
@@ -40,6 +36,7 @@ class Player_Character
 		this.current_hp = 100;
 		this.total_hp = 100;
 		this.drunk = 0;
+		this.stealth = 10;
 	}
 	
 	public void add_action(Action new_action)
@@ -219,9 +216,8 @@ class Player_Character
 				}
 			}
 			
-			
-			
 		}
+		
 	}
 	
 	class Ruminate extends Action
@@ -258,6 +254,11 @@ class Player_Character
 		
 	}*/
 	
+	public boolean be_stealthy(int how_hard)
+	{
+		return (how_hard < helpers.random(0, 100)+stealth);
+	}
+	
 	public void remove_action(Action one_to_remove)
 	{
 		what_do.remove(one_to_remove);
@@ -281,7 +282,7 @@ class Player_Character
 		here = where_to;
 	}
 	
-	private void time_passes()
+	protected void time_passes()
 	{
 		if(drunk > 0)
 		{
@@ -347,11 +348,34 @@ class Player_Character
 		}
 	}
 	
+	public item PC_select_item()
+	{
+		return my_inventory.Select_Item();
+	}
+	
+	public void remove_item(item which)
+	{
+		my_inventory.remove_item(which, 100000);
+	}
+	
+	public void take_from(item from_where, int how_many)
+	{
+		int x = my_inventory.check_item(from_where.get_name());
+		if(x >= 0)
+		{
+			my_inventory.add_more(x, how_many);
+		}
+		else
+		{
+			my_inventory.add_new_item(new item(from_where, how_many));
+		}
+	}
+	
 //////////////////////////////////////
 	class Inventory
 	{
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Inventory() //TODO: finish Inventory and Item. Also the implementation of them.
+		Inventory()
 		{
 			the_items = new ArrayList(0);
 			total_weight = 0;
@@ -450,7 +474,6 @@ class Player_Character
 			helpers.finish_output();
 		}
 		
-		//TODO change to 'add new item'
 		public void add_new_item(item to_be_added)
 		{
 			the_items.add(to_be_added);
@@ -674,6 +697,11 @@ class Player_Character
 		}
 	}
 	
+	public boolean knows_fact(int fact_id)
+	{
+		return my_knowledge.contains_id(fact_id);
+	}
+	
 //////////////////	
 	class Knowledge
 	{
@@ -735,6 +763,7 @@ class Player_Character
 	private int current_hp;
 	private mobility_controller location_knowledge;
 	private int drunk;
+	private int stealth;
 	
 }
 
@@ -810,6 +839,7 @@ abstract class Location
 	{
 		who_is_here = new Vector<Person>();
 		options = new Vector<Action>();
+		flammability = 0;
 
 		options.add(new Search());
 		unattended_stuff = new Vector<item>();
@@ -822,11 +852,35 @@ abstract class Location
 		options = new Vector<Action>();
 		Loc_name = name;
 		accessibility = 0;
+		flammability = 0;
+	
+		
 		unattended_stuff = new Vector<item>();
-
 		options.add(new Search());
 	}
 	
+	public void time_passes()
+	{
+		if(this.burning)
+		{
+			if(helpers.random(0, 100) < this.get_flammability())
+			{
+				//building has burnt
+				this.Loc_name = "The Burnt Remains of " + this.Loc_name;
+			}
+			else
+			{
+				//TODO: injure people here
+				helpers.output(this.Where() + " is burning!");
+			}
+		}
+	}
+	
+	protected int get_flammability()
+	{
+		return flammability;
+	}
+
 	public boolean can_individual_visit(int mobility)
 	{
 		if(mobility > accessibility)
@@ -880,6 +934,22 @@ abstract class Location
 		return false;
 	}
 	
+	public boolean burn_location()
+	{
+		if(this.get_flammability()==0)
+		{
+			//can't be burnt
+			return false;			
+		}
+		else
+		{
+			burning = true;
+		}
+		
+		return true;
+	}
+	
+
 	class Search extends Action
 	{
 		Search()
@@ -901,6 +971,7 @@ abstract class Location
 				{
 					if(unattended_stuff.get(x).get_stolen())
 					{
+						//TODO: add stealth
 						helpers.output_partial_list(x+1, unattended_stuff.get(x).get_name() + " (" + Integer.toString(unattended_stuff.get(x).get_count()) + ")", true);
 					}
 					else
@@ -908,47 +979,57 @@ abstract class Location
 						helpers.output_partial_list(x+1, unattended_stuff.get(x).get_name() + " (" + Integer.toString(unattended_stuff.get(x).get_count()) + ")");
 					}
 				}
+				
+				helpers.output_partial_list(unattended_stuff.size() + 1, "Nothing");
+				
 				helpers.output("What would you like to take?");
 				helpers.finish_output();
 				
-				int which = helpers.which_one(unattended_stuff.size());
+				int which = helpers.which_one(unattended_stuff.size() + 1);
 				
-				helpers.output("How many?");
-
-				int how_many = helpers.which_one(10000) +1; //adding 1 because of how which_one is coded
-				
-				item blarg = new item();
-				blarg = unattended_stuff.get(which);
-				blarg.set_count(how_many);
-				
-				helpers.get_PC().add_item(blarg);
-				
-				if(unattended_stuff.get(which).get_count() > how_many)
+				if(which < unattended_stuff.size()) //else it's 'nothing'
 				{
-					unattended_stuff.get(which).set_count(unattended_stuff.get(which).get_count() - how_many);
+					helpers.output("How many?");
+	
+					int how_many = helpers.which_one(10000) +1; //adding 1 because of how which_one is coded
+					
+					boolean stealthy = helpers.get_PC().be_stealthy(2*how_many);
+					
+					if(!unattended_stuff.get(which).get_stolen() || stealthy)
+					{
+						helpers.get_PC().take_from(unattended_stuff.get(which), how_many);
+						
+						if(unattended_stuff.get(which).get_count() > how_many)
+						{
+							unattended_stuff.get(which).set_count(unattended_stuff.get(which).get_count() - how_many);
+						}
+						else
+						{
+							unattended_stuff.remove(which);
+						}
+					}
+					else
+					{
+						helpers.output("You fail to steal the " + unattended_stuff.get(which).get_name());
+					}
 				}
-				else
-				{
-					unattended_stuff.remove(which);
-				}
-				
-				
 			}
 		}
 	}
+	
+	
 	
 	private String Loc_name;
 	protected Vector<Action> options;
 	protected Vector<Person> who_is_here;
 	protected int accessibility; //lower is easier
 	protected Vector<item> unattended_stuff;
+	protected int flammability; //percent chance to be done burning
+	protected boolean burning;
 	
 }
 
 
-
-
-//TODO: finish item
 //don't make this abstract. You can have random 'stuff' items
 class item
 {
@@ -966,6 +1047,19 @@ class item
 		quantity=1;
 	}
 	
+	public item(item from_where, int how_many)
+	{
+		name = from_where.name;
+		rules_description = from_where.rules_description;
+		flavor_text = from_where.flavor_text;
+		weight = from_where.weight;
+		value = from_where.value;
+		stolen = from_where.stolen;
+		ability = from_where.ability;
+		slot = from_where.slot;
+		quantity = how_many;
+	}
+
 	public boolean get_stolen()
 	{
 		return stolen;

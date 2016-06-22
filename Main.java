@@ -18,7 +18,6 @@ class My_Game_Initializer extends Game_Initializer
 {
 	public void Initialize(Vector<Location> places, Vector<Person> NPCs)
 	{
-			//TODO: initialize all the Locations
 			/////Locations
 			Location Blacksmith = new Forge("Blacksmith's");
 			Location Bobs_Fields = new Field("Bob's Field");
@@ -33,7 +32,7 @@ class My_Game_Initializer extends Game_Initializer
 			places.add(Bobs_Hovel);
 			places.add(Tavern);			
 			
-			//TODO: initialize all the NPCs
+			
 			////Persons
 			Person Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
 			Bobs_Fields.AddPerson(Generic_Peasant);
@@ -141,7 +140,7 @@ class Noble_Kesh extends Noble
 	Noble_Kesh(Location L)
 	{
 		super(L,"High Lord Kesh of No-Funnington");
-		//TODO: add some knowledge so that it doesn't error
+		
 		knowledge_base.add(new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
 		knowledge_base.add(new Dungeon_Fact());
 	
@@ -174,6 +173,7 @@ class Forge extends Location
 	Forge(String name)
 	{
 		super(name);
+		flammability = 20;
 	} 
 
 }
@@ -184,9 +184,8 @@ class Field extends Location
 	Field(String name)
 	{
 		super(name);
+		flammability = 90;
 	}
-	
-
 }
 
 ///////////////////////////////
@@ -195,6 +194,7 @@ class Hovel extends Location
 	Hovel(String name)
 	{
 		super(name);
+		flammability = 75;
 	}
 }
 
@@ -205,29 +205,23 @@ class Tavern extends Location
 	{
 		super(name);
 		
-		wine blarg = new wine();
-		blarg.set_stolen(true);
-		blarg.set_count(10000);
+		wine unattended_wine = new wine();
+		unattended_wine.set_stolen(true);
+		unattended_wine.set_count(100);
 		
-		unattended_stuff.add(blarg);
+		unattended_stuff.add(unattended_wine);
 		
-//		options.add(new steal_wine());
+		flammability = 30;
 	}
 	
-/*	class steal_wine extends Action
+	@Override
+	protected int get_flammability()
 	{
-		steal_wine()
-		{
-			description = "steal some wine";
-		}
+		int where = unattended_stuff.indexOf(new wine());
+		int how_much = unattended_stuff.get(where).get_count();
 		
-		public void What_Happens()
-		{
-			helpers.get_PC().add_item(new wine());
-		}
-	
-		//TODO add a can_be_done based on a new PC mechanic 'stealth'
-	}*/
+		return Math.max(0, how_much);
+	}
 }
 
 
@@ -426,52 +420,31 @@ class torch extends consumable_item
 	{
 		burn()
 		{
-			description = "light torch so you can burn things";
+			description = "burn things";
 		}
 		
 		protected void Other_Happenings()
 		{
-			class Burn_Building extends Action
+			helpers.output("Which?");
+			helpers.output_partial_list(1, "Building");
+			helpers.output_partial_list(2, "Item");;
+			
+			int which = helpers.which_one(2) + 1;
+			
+			if(which==1)
 			{
-				Burn_Building()
-				{
-					description = "light a building on fire";
-				}
+				Location here = helpers.get_PC().Get_Location();
 				
-				public String Get_Description()
+				if(!here.burn_location())
 				{
-					return "Light " + helpers.get_PC().Get_Location().Where() + " on fire";
-				}
-				
-				@Override
-				public void What_Happens()
-				{
-					Location here = helpers.get_PC().Get_Location();
-					here.set_name("Burned Remains of " + here.Where());
-					
-					helpers.get_PC().remove_action(this);
+					helpers.output("it doesn't catch");
 				}
 			}
-			
-			class Burn_Item extends Action
+			else
 			{
-				public Burn_Item()
-				{
-					description = "Light an item on fire";
-				}
-				
-				@Override
-				public void What_Happens()
-				{
-					// TODO Auto-generated method stub
-					
-					helpers.get_PC().remove_action(this);
-				}
+				item which_item = helpers.get_PC().PC_select_item();
+				helpers.get_PC().remove_item(which_item);
 			}
-			
-			helpers.get_PC().add_action(new Burn_Building());
-			helpers.get_PC().add_action(new Burn_Item());
 		}
 	}
 }
-

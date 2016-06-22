@@ -28,6 +28,7 @@ abstract public class Game_Initializer
 		while(true)
 		{
 			The_Player.InteractWithEnvironment();
+			helpers.time_passes();
 			for(int x = 0; x < NPCs.size(); x++)
 				NPCs.get(x).Act();
 			
@@ -48,6 +49,15 @@ class helpers
 		Location_List = places;
 	}
 	
+	public static void time_passes()
+	{
+		PC.time_passes();
+		for(int x=0; x<Location_List.size(); x++)
+		{
+			Location_List.get(x).time_passes();
+		}
+	}
+
 	public static void increment_time()
 	{
 		time_of_day++;
