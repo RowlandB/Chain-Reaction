@@ -16,7 +16,7 @@ public class Main
 
 class My_Game_Initializer extends Game_Initializer
 {
-	public void Initialize(Vector<Location> places, Vector<Person> NPCs)
+	public void Initialize(Vector<Location> places, Vector<NPC> NPCs)
 	{
 			/////Locations
 			Location Blacksmith = new Forge("Blacksmith's");
@@ -34,19 +34,19 @@ class My_Game_Initializer extends Game_Initializer
 			
 			
 			////Persons
-			Person Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
+			NPC Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
 			Bobs_Fields.AddPerson(Generic_Peasant);
 			NPCs.add(Generic_Peasant);
 			
-			Person Generic_Noble = new Noble_Kesh(Keshies_Castle);
+			NPC Generic_Noble = new Noble_Kesh(Keshies_Castle);
 			Keshies_Castle.AddPerson(Generic_Noble);
 			NPCs.add(Generic_Noble);
 			
-			Person Angry_Peasant = new Norton(Tavern);
+			NPC Angry_Peasant = new Norton(Tavern);
 			Tavern.AddPerson(Angry_Peasant);
 			NPCs.add(Angry_Peasant);
 			
-			Person Hank = new Noble_Hank(Keshies_Castle);
+			NPC Hank = new Noble_Hank(Keshies_Castle);
 			Keshies_Castle.AddPerson(Hank);
 			NPCs.add(Hank);
 	}
@@ -64,7 +64,6 @@ class Bob extends Commoner
 		super(L,"Bob");
 		
 		home = new_home;
-		//TODO: add some knowledge so that it doesn't error
 		
 		//proof-of-concept, shows we can make actions that change our actions
 		/*
@@ -427,7 +426,8 @@ class torch extends consumable_item
 		{
 			helpers.output("Which?");
 			helpers.output_partial_list(1, "Building");
-			helpers.output_partial_list(2, "Item");;
+			helpers.output_partial_list(2, "Item");
+			helpers.finish_output();
 			
 			int which = helpers.which_one(2) + 1;
 			

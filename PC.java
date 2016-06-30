@@ -5,7 +5,7 @@ import java.util.Vector;
 
 
 ///////////////////////////////
-class Player_Character
+class Player_Character extends Person
 {
 	public  Player_Character(Location Start)
 	{
@@ -136,7 +136,7 @@ class Player_Character
 		public void What_Happens()
 		{
 			String people;
-			Vector<Person> everyone =  here.GetEveryone();
+			Vector<NPC> everyone =  here.GetEveryone();
 			if(everyone.size() == 0)
 			{
 				people = "There's no one to talk to! (unless you want to talk to yourself)";
@@ -371,7 +371,28 @@ class Player_Character
 		}
 	}
 	
-//////////////////////////////////////
+	
+	@Override
+	public void injure(int x)
+	{
+		if(current_hp-x <= 0)
+		{
+			this.die();
+		}
+		else
+		{
+			current_hp = current_hp - x;
+		}
+		
+	}
+	
+	private void die()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	//////////////////////////////////////
 	class Inventory
 	{
 		@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -681,8 +702,6 @@ class Player_Character
 		
 		private int total_weight;
 		private ArrayList<item> the_items;
-		private mobility_controller arg;
-		
 	}
 
 	public boolean has_item(String item_name)
@@ -759,11 +778,10 @@ class Player_Character
 	private Inventory my_inventory;
 	private Vector<Action> what_do;
 	private Location here;
-	private int total_hp;
-	private int current_hp;
 	private mobility_controller location_knowledge;
 	private int drunk;
 	private int stealth;
+	
 	
 }
 
@@ -824,438 +842,14 @@ abstract class Action
 	public boolean can_be_done(){return true;}
 	public void What_Happens(){}
 	public String description;
+
+	//TODO: add support for long/short actions
+	//private double time_to_completion
 }
 
 
 
-///////////////////////////////
 
-
-
-///////////////////////////////
-abstract class Location
-{
-	Location()
-	{
-		who_is_here = new Vector<Person>();
-		options = new Vector<Action>();
-		flammability = 0;
-
-		options.add(new Search());
-		unattended_stuff = new Vector<item>();
-	}
-	
-	public Location(String name)
-	{
-		
-		who_is_here = new Vector<Person>();
-		options = new Vector<Action>();
-		Loc_name = name;
-		accessibility = 0;
-		flammability = 0;
-	
-		
-		unattended_stuff = new Vector<item>();
-		options.add(new Search());
-	}
-	
-	public void time_passes()
-	{
-		if(this.burning)
-		{
-			if(helpers.random(0, 100) < this.get_flammability())
-			{
-				//building has burnt
-				this.Loc_name = "The Burnt Remains of " + this.Loc_name;
-			}
-			else
-			{
-				//TODO: injure people here
-				helpers.output(this.Where() + " is burning!");
-			}
-		}
-	}
-	
-	protected int get_flammability()
-	{
-		return flammability;
-	}
-
-	public boolean can_individual_visit(int mobility)
-	{
-		if(mobility > accessibility)
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	//A location will never remove a person by itself: this should only be called from Person
-	public void RemovePerson(Person leaver)
-	{
-		who_is_here.remove(leaver);		
-	}
-	
-	public void AddPerson(Person arrival)
-	{
-		who_is_here.add(arrival);
-	}
-	
-	public Vector<Person> GetEveryone()
-	{
-		return who_is_here;
-	}
-	
-	public Vector<Action> Get_Actions()
-	{
-		return options;
-	}
-	
-	public String Where()
-	{
-		return Loc_name;
-	}
-	
-	public void set_name(String new_name)
-	{
-		Loc_name = new_name;
-	}
-	
-	public boolean has_present(String name)
-	{
-		for(int x=0; x<who_is_here.size(); x++)
-		{
-			if(who_is_here.get(x).Get_Name().equals(name))
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	public boolean burn_location()
-	{
-		if(this.get_flammability()==0)
-		{
-			//can't be burnt
-			return false;			
-		}
-		else
-		{
-			burning = true;
-		}
-		
-		return true;
-	}
-	
-
-	class Search extends Action
-	{
-		Search()
-		{
-			description = "Search the area";
-		}
-		
-		@Override
-		public void What_Happens()
-		{
-			if(unattended_stuff.size()==0)
-			{
-				helpers.output("You find nothing");
-			}
-			else
-			{
-				helpers.output("You find:");
-				for(int x=0; x<unattended_stuff.size(); x++)
-				{
-					if(unattended_stuff.get(x).get_stolen())
-					{
-						//TODO: add stealth
-						helpers.output_partial_list(x+1, unattended_stuff.get(x).get_name() + " (" + Integer.toString(unattended_stuff.get(x).get_count()) + ")", true);
-					}
-					else
-					{
-						helpers.output_partial_list(x+1, unattended_stuff.get(x).get_name() + " (" + Integer.toString(unattended_stuff.get(x).get_count()) + ")");
-					}
-				}
-				
-				helpers.output_partial_list(unattended_stuff.size() + 1, "Nothing");
-				
-				helpers.output("What would you like to take?");
-				helpers.finish_output();
-				
-				int which = helpers.which_one(unattended_stuff.size() + 1);
-				
-				if(which < unattended_stuff.size()) //else it's 'nothing'
-				{
-					helpers.output("How many?");
-	
-					int how_many = helpers.which_one(10000) +1; //adding 1 because of how which_one is coded
-					
-					boolean stealthy = helpers.get_PC().be_stealthy(2*how_many);
-					
-					if(!unattended_stuff.get(which).get_stolen() || stealthy)
-					{
-						helpers.get_PC().take_from(unattended_stuff.get(which), how_many);
-						
-						if(unattended_stuff.get(which).get_count() > how_many)
-						{
-							unattended_stuff.get(which).set_count(unattended_stuff.get(which).get_count() - how_many);
-						}
-						else
-						{
-							unattended_stuff.remove(which);
-						}
-					}
-					else
-					{
-						helpers.output("You fail to steal the " + unattended_stuff.get(which).get_name());
-					}
-				}
-			}
-		}
-	}
-	
-	
-	
-	private String Loc_name;
-	protected Vector<Action> options;
-	protected Vector<Person> who_is_here;
-	protected int accessibility; //lower is easier
-	protected Vector<item> unattended_stuff;
-	protected int flammability; //percent chance to be done burning
-	protected boolean burning;
-	
-}
-
-
-//don't make this abstract. You can have random 'stuff' items
-class item
-{
-	item()
-	{
-		
-		name = "a 'thing'";
-		rules_description = "no, really, this is just the default item description, it does nothing";
-		flavor_text = "a boring 'thing' with no discernable use";
-		weight = 0;
-		value = 0.0000001;
-		stolen = false;
-		ability = new Nothing();
-		slot=equip_region.not_equippable;
-		quantity=1;
-	}
-	
-	public item(item from_where, int how_many)
-	{
-		name = from_where.name;
-		rules_description = from_where.rules_description;
-		flavor_text = from_where.flavor_text;
-		weight = from_where.weight;
-		value = from_where.value;
-		stolen = from_where.stolen;
-		ability = from_where.ability;
-		slot = from_where.slot;
-		quantity = how_many;
-	}
-
-	public boolean get_stolen()
-	{
-		return stolen;
-	}
-	
-	public void set_stolen(boolean is_stolen)
-	{
-		stolen = is_stolen;
-	}
-	
-	public void set_count(int how_many)
-	{
-		quantity = how_many;
-	}
-
-	class Nothing extends Action
-	{
-		Nothing()
-		{
-			description = "nothing will happen";
-		}
-		
-		public void What_Happens()
-		{
-			helpers.output("surprisingly, nothing happens");
-			helpers.finish_output();
-		}
-	}
-	
-	public void Display()
-	{
-		helpers.output("Name: " +name);
-		helpers.output(rules_description);
-		helpers.output("Weight: " + weight + " Value: " + value + weight/value);
-		helpers.output("Stolen: " + stolen);
-		helpers.output("Count: " + quantity);
-		helpers.finish_output();
-	}
-	
-	public int get_weight()
-	{
-		return weight;
-	}
-	
-	public equip_region get_slot()
-	{
-		return slot;
-	}
-	
-	public String get_name()
-	{
-		return name;
-	}
-	
-	public Action get_abiltiy()
-	{
-		return ability;
-	}
-	
-	public int get_count()
-	{
-		return quantity;
-	}
-	
-	
-	/**
-	 * a check should be done that this does not set to negative. I will error you if you do.
-	 * same with going to 0. Delete the item if you're going to 0 of them.
-	 * 
-	 * @param how_many to add
-	 * if negative, removes them
-	 */
-	public void change_quantity(int how_many) 
-	{
-		assert(this.quantity + how_many <= 0);
-		
-		quantity = quantity + how_many;
-	}
-	
-	protected String name;
-	protected String rules_description;
-	protected String flavor_text;
-	protected int weight;
-	protected double value;
-	protected boolean stolen;
-	protected Action ability;
-	protected equip_region slot;
-	protected int quantity;
-}
-
-
-class readable_item extends item
-{
-	readable_item(String base_name, String base_text)
-	{
-		name = base_name;
-		weight = 0;
-		value = 0;
-		stolen = false;
-		read = false;
-		
-		text = base_text;
-	}
-	
-	public void Display()
-	{
-		helpers.output("Name: " + name);
-		helpers.output(rules_description);
-		helpers.output(flavor_text);
-		helpers.output("Weight: " + weight + " Value: " + value + weight/value);
-		helpers.output("Stolen: " + stolen);
-		helpers.output("Count: " + quantity);
-		helpers.output("Read: " + read);
-		helpers.finish_output();
-	}
-	
-	class Read extends Action
-	{
-		Read()
-		{
-			description = "Display the writing";
-		}
-		
-		public void What_Happens()
-		{
-			helpers.output(text);
-			helpers.finish_output();
-			
-			read = true;
-		}
-
-	}
-	
-	
-	private String text;
-	private boolean read;
-}
-
-abstract class equippable_item extends item
-{
-	equippable_item(equip_region where)
-	{
-		equipped = false;
-		slot = where;
-	}
-	
-	public void Display()
-	{
-		super.Display();
-		helpers.output(slot.toString()); //I really hope this works
-		helpers.finish_output();
-	}
-	
-	public void on_equip()
-	{
-		System.err.println("equipped " + this.name + " item");
-		equipped = true;
-		
-	}
-	
-	public void on_unequip()
-	{
-		System.err.println("unequipped " + this.name + " item");
-		equipped = false;
-	}
-	
-	private boolean equipped;
-}
-
-//only here for testing
-class lazy_equip extends equippable_item
-{
-	lazy_equip(equip_region where)
-	{
-		super(where);
-	}
-}
-
-
-
-abstract class consumable_item extends item
-{
-	
-	abstract class consume extends Action
-	{
-		final public void What_Happens()
-		{
-			helpers.get_PC().decrement_consumable(the_item);
-			Other_Happenings();
-		}
-		
-		abstract protected void Other_Happenings();
-	}
-	
-	private item the_item=this;
-}
 
 
 //////////////////////////////

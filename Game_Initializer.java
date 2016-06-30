@@ -5,7 +5,7 @@ import java.util.Vector;
 
 abstract public class Game_Initializer
 {
-	abstract public void Initialize(Vector<Location> places, Vector<Person> NPCs);
+	abstract public void Initialize(Vector<Location> places, Vector<NPC> NPCs);
 	
 	
 	public Player_Character new_Player()
@@ -17,7 +17,7 @@ abstract public class Game_Initializer
 	final public void Play_Game()
 	{
 		Vector<Location> places = new Vector<Location>(0);
-		Vector<Person> NPCs = new Vector<Person> (0);
+		Vector<NPC> NPCs = new Vector<NPC> (0);
 		
 		this.Initialize(places, NPCs);
 		
@@ -28,11 +28,11 @@ abstract public class Game_Initializer
 		while(true)
 		{
 			The_Player.InteractWithEnvironment();
-			helpers.time_passes();
 			for(int x = 0; x < NPCs.size(); x++)
 				NPCs.get(x).Act();
 			
-			helpers.increment_time();
+			helpers.time_passes();
+
 		}
 	}
 }
@@ -40,7 +40,7 @@ abstract public class Game_Initializer
 //////////////////////////////
 class helpers
 {
-	helpers(Player_Character hero, Vector<Location> places, Vector<Person> NPCs)
+	helpers(Player_Character hero, Vector<Location> places, Vector<NPC> NPCs)
 	{
 		time_of_day=12;
 		PC = hero;
@@ -56,9 +56,10 @@ class helpers
 		{
 			Location_List.get(x).time_passes();
 		}
+		increment_time();
 	}
 
-	public static void increment_time()
+	private static void increment_time()
 	{
 		time_of_day++;
 		if(time_of_day>23)
@@ -144,7 +145,7 @@ class helpers
 		throw new InvalidParameterException();
 	}
 	
-	static Person Get_Person_by_name(String NPC_name)
+	static NPC Get_Person_by_name(String NPC_name)
 	{
 		for(int x=0; x<NPC_List.size(); x++)
 		{
@@ -163,7 +164,7 @@ class helpers
 		static Player_Character PC;
 		static IO_Object IO;
 		static Vector<Location> Location_List;
-		static Vector<Person> NPC_List;
+		static Vector<NPC> NPC_List;
 		
 	}
 	
@@ -173,7 +174,7 @@ class helpers
 	}
 	
 	
-	class null_person extends Person
+	class null_person extends NPC
 	{
 		null_person()
 		{
