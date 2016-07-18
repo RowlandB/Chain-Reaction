@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.HashMap;
 import java.util.Vector;
 
 
@@ -18,16 +19,17 @@ class Player_Character extends Person
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
+		my_inventory.add_new_item(new torch());
 		
 		this.my_knowledge = new Knowledge();
 		
-		this.what_do = new Vector<Action>(0);
+		this.what_do = new HashMap<String, Action>(0);
 
-		what_do.add(new Move());
-		what_do.add(new Chat());
-		what_do.add(new ExamineInventory());
-		what_do.add(new Ruminate());
-		what_do.add(new DoNothing());
+		what_do.put("Move", new Move());
+		what_do.put("Chat", new Chat());
+		what_do.put("Inventory", new ExamineInventory());
+		what_do.put("Facts", new Ruminate());
+		what_do.put("Nothing", new DoNothing());
 		
 		this.location_knowledge = new mobility_controller();
 		
@@ -41,7 +43,7 @@ class Player_Character extends Person
 	
 	public void add_action(Action new_action)
 	{
-		what_do.add(new_action);
+		what_do.put(new_action.Get_Description(),new_action);
 	}
 	
 	//displays at all the actions the player can do
@@ -50,7 +52,7 @@ class Player_Character extends Person
 		
 		this.time_passes();
 		
-		Vector<Action> potential_actions = Get_Viable_Actions();
+		ArrayList<Action> potential_actions = Get_Viable_Actions();
 		
 		//helpers.output("");
 		helpers.output("Time: " + String.valueOf(helpers.Get_Time()));
@@ -67,26 +69,25 @@ class Player_Character extends Person
 	}
 	
 	
-	//TODO: add logic to ensure that a player can never get a blank action
-	private Vector<Action> Get_Viable_Actions()
+	private ArrayList<Action> Get_Viable_Actions()
 	{
-		Vector<Action> potentials = new Vector<Action>();
+		ArrayList<Action> potentials = new ArrayList<Action>();
 		
-		for(int x=0; x<what_do.size(); x++)
+		for(Action possible_action: what_do.values())
 		{
-			if(what_do.get(x).can_be_done())
+			if(possible_action.can_be_done())
 			{
-				potentials.add(what_do.get(x));
+				potentials.add(possible_action);
 			}
 		}
 		
-		Vector<Action> other_options = here.Get_Actions();
+		HashMap<String, Action> other_options = here.Get_Actions();
 		
-		for(int x=0; x<other_options.size(); x++)
+		for(Action possible_action: other_options.values())
 		{
-			if(other_options.get(x).can_be_done())
+			if(possible_action.can_be_done())
 			{
-				potentials.add(other_options.get(x));
+				potentials.add(possible_action);
 			}
 		}
 		
@@ -106,14 +107,13 @@ class Player_Character extends Person
 			
 			int y=1;
 			ArrayList<Location> potential_places = new ArrayList<Location>();
-			for(int x = 0; x<helpers.Location_List.size(); x++)
+			for(Location places: helpers.Location_List.values())
 			{
-				Location place = helpers.Location_List.get(x);
 				
-				if(place.can_individual_visit(location_knowledge.get_score(place.Where())))
+				if(places.can_individual_visit(location_knowledge.get_score(places.Where())))
 				{
-					potential_places.add(place);
-					helpers.output_partial_list(y, place.Where());
+					potential_places.add(places);
+					helpers.output_partial_list(y, places.Where());
 					y++;
 				}
 			}
@@ -136,7 +136,7 @@ class Player_Character extends Person
 		public void What_Happens()
 		{
 			String people;
-			Vector<NPC> everyone =  here.GetEveryone();
+			ArrayList<NPC> everyone =  new ArrayList<NPC>(here.GetEveryone().values());
 			if(everyone.size() == 0)
 			{
 				people = "There's no one to talk to! (unless you want to talk to yourself)";
@@ -145,8 +145,8 @@ class Player_Character extends Person
 			}
 			else
 			{
-				helpers.output("With whom would you like to speak ?");
-				for(int x = 0; x <everyone.size(); x++)
+				helpers.output("With whom would you like to speak?");
+				for(int x=0; x< everyone.size(); x++)
 				{
 					helpers.output_partial_list(x+1, everyone.get(x).Get_Name());
 				}
@@ -776,7 +776,7 @@ class Player_Character extends Person
 	private String name;
 	private Knowledge my_knowledge;
 	private Inventory my_inventory;
-	private Vector<Action> what_do;
+	private HashMap<String, Action> what_do;
 	private Location here;
 	private mobility_controller location_knowledge;
 	private int drunk;

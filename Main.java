@@ -1,5 +1,5 @@
 import java.util.Random;
-import java.util.Vector;
+import java.util.HashMap;
 
 
 public class Main
@@ -16,7 +16,7 @@ public class Main
 
 class My_Game_Initializer extends Game_Initializer
 {
-	public void Initialize(Vector<Location> places, Vector<NPC> NPCs)
+	public void Initialize(HashMap<String, Location> places, HashMap<String, NPC> NPCs)
 	{
 			/////Locations
 			Location Blacksmith = new Forge("Blacksmith's");
@@ -25,30 +25,30 @@ class My_Game_Initializer extends Game_Initializer
 			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
 			Location Bobs_Hovel = new Hovel("Bob's Hovel");
 			Location Tavern = new Tavern("The Tavern");
-			places.add(Blacksmith);
-			places.add(Bobs_Fields);
-			places.add(Keshies_Castle);
-			places.add(Dungeon);
-			places.add(Bobs_Hovel);
-			places.add(Tavern);			
+			places.put("Blacksmith's", Blacksmith);
+			places.put("Bob's Field", Bobs_Fields);
+			places.put("Keshie's Castle", Keshies_Castle);
+			places.put("Dungeon Below Keshie's Castle", Dungeon);
+			places.put("Bob's Hovel", Bobs_Hovel);
+			places.put("The Tavern", Tavern);			
 			
 			
 			////Persons
 			NPC Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
 			Bobs_Fields.AddPerson(Generic_Peasant);
-			NPCs.add(Generic_Peasant);
+			NPCs.put("Bob", Generic_Peasant);
 			
 			NPC Generic_Noble = new Noble_Kesh(Keshies_Castle);
 			Keshies_Castle.AddPerson(Generic_Noble);
-			NPCs.add(Generic_Noble);
+			NPCs.put("Noble Kesh", Generic_Noble);
 			
 			NPC Angry_Peasant = new Norton(Tavern);
 			Tavern.AddPerson(Angry_Peasant);
-			NPCs.add(Angry_Peasant);
+			NPCs.put("Norton", Angry_Peasant);
 			
 			NPC Hank = new Noble_Hank(Keshies_Castle);
 			Keshies_Castle.AddPerson(Hank);
-			NPCs.add(Hank);
+			NPCs.put("Hank", Hank);
 	}
 
 	public Player_Character new_Player()
@@ -96,7 +96,7 @@ class Bob extends Commoner
 			
 			protected int how_likely()
 			{
-				if(helpers.get_PC().Get_Location().equals(place) && helpers.get_PC().has_item("wine"))
+				if(helpers.get_PC().Get_Location().equals(current_location) && helpers.get_PC().has_item("wine"))
 				{
 					return likelihood;
 				}
@@ -140,8 +140,8 @@ class Noble_Kesh extends Noble
 	{
 		super(L,"High Lord Kesh of No-Funnington");
 		
-		knowledge_base.add(new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
-		knowledge_base.add(new Dungeon_Fact());
+		knowledge_base.put("goblins", new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
+		knowledge_base.put("dungeon", new Dungeon_Fact());
 	
 		personal_greeting = "greetings, peasant";
 	}
@@ -153,7 +153,7 @@ class Noble_Hank extends Noble
 	{
 		super(L, "Hank");
 		
-		knowledge_base.addElement(new Hank_likes_wine());
+		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
 		
 		personal_greeting = "Do you have any wine?";
 	}
@@ -208,7 +208,7 @@ class Tavern extends Location
 		unattended_wine.set_stolen(true);
 		unattended_wine.set_count(100);
 		
-		unattended_stuff.add(unattended_wine);
+		unattended_stuff.put("wine", unattended_wine);
 		
 		flammability = 30;
 	}
@@ -216,8 +216,7 @@ class Tavern extends Location
 	@Override
 	protected int get_flammability()
 	{
-		int where = unattended_stuff.indexOf(new wine());
-		int how_much = unattended_stuff.get(where).get_count();
+		int how_much = unattended_stuff.get("wine").get_count();
 		
 		return Math.max(0, how_much);
 	}
@@ -231,7 +230,7 @@ class Castle extends Location
 	{
 		super(name);
 		Action laugh_at_plebs = new oppress_peasants();
-		options.add(laugh_at_plebs);
+		options.put("laugh_at_plebs", laugh_at_plebs);
 	}
 
 	class oppress_peasants extends Action
@@ -265,7 +264,7 @@ class Dungeon extends Location
 		torch blarg = new torch();
 		
 		
-		unattended_stuff.add(blarg);
+		unattended_stuff.put("torch", blarg);
 	}
 	
 	

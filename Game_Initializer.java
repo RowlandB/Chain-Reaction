@@ -1,11 +1,11 @@
 import java.security.InvalidParameterException;
 import java.util.Random;
-import java.util.Vector;
+import java.util.HashMap;
 
 
 abstract public class Game_Initializer
 {
-	abstract public void Initialize(Vector<Location> places, Vector<NPC> NPCs);
+	abstract public void Initialize(HashMap<String, Location> places, HashMap<String, NPC> NPCs);
 	
 	
 	public Player_Character new_Player()
@@ -16,8 +16,8 @@ abstract public class Game_Initializer
 	
 	final public void Play_Game()
 	{
-		Vector<Location> places = new Vector<Location>(0);
-		Vector<NPC> NPCs = new Vector<NPC> (0);
+		HashMap<String, Location> places = new HashMap<String, Location>(0);
+		HashMap<String, NPC> NPCs = new HashMap<String, NPC> (0);
 		
 		this.Initialize(places, NPCs);
 		
@@ -28,8 +28,10 @@ abstract public class Game_Initializer
 		while(true)
 		{
 			The_Player.InteractWithEnvironment();
-			for(int x = 0; x < NPCs.size(); x++)
-				NPCs.get(x).Act();
+			for(NPC an_NPC : NPCs.values())
+			{
+				an_NPC.Act();
+			}
 			
 			helpers.time_passes();
 
@@ -40,11 +42,15 @@ abstract public class Game_Initializer
 //////////////////////////////
 class helpers
 {
-	helpers(Player_Character hero, Vector<Location> places, Vector<NPC> NPCs)
+	//TODO stop this from being just a catch-all of globals
+	
+	helpers(Player_Character hero, HashMap<String, Location> places, HashMap<String, NPC> NPCs)
 	{
 		time_of_day=12;
 		PC = hero;
-		IO = new Frame_Button_IO_Object();
+		IO = new System_IO_Object();
+		
+		//IO = new Frame_Button_IO_Object();
 		NPC_List = NPCs;
 		Location_List = places;
 	}
@@ -52,9 +58,14 @@ class helpers
 	public static void time_passes()
 	{
 		PC.time_passes();
-		for(int x=0; x<Location_List.size(); x++)
+		for(Location place : Location_List.values())
 		{
-			Location_List.get(x).time_passes();
+			place.time_passes();
+		}
+		
+		for(NPC an_NPC : NPC_List.values())
+		{
+			an_NPC.time_passes();
 		}
 		increment_time();
 	}
@@ -127,7 +138,7 @@ class helpers
 		return random.nextInt(max-min+1)+min;
 	}
 	
-	//static Vector<Location> Get_Locations()
+	//static HashMap<Location> Get_Locations()
 	//{
 	//return Location_List;
 	//}
@@ -163,8 +174,8 @@ class helpers
 		private static int time_of_day;
 		static Player_Character PC;
 		static IO_Object IO;
-		static Vector<Location> Location_List;
-		static Vector<NPC> NPC_List;
+		static HashMap<String, Location> Location_List;
+		static HashMap<String, NPC> NPC_List;
 		
 	}
 	
