@@ -158,18 +158,8 @@ class helpers
 	
 	static NPC Get_Person_by_name(String NPC_name)
 	{
-		for(int x=0; x<NPC_List.size(); x++)
-		{
-			if(NPC_List.get(x).Get_Name().equals(NPC_name))
-			{
-				return NPC_List.get(x);
-			}
-		}
-	
-			System.err.println("specified Person does not exist");
-			assert(false);
-			return new null_person();
-		}
+		return NPC_List.get(NPC_name);
+	}
 		
 		private static int time_of_day;
 		static Player_Character PC;
@@ -177,19 +167,10 @@ class helpers
 		static HashMap<String, Location> Location_List;
 		static HashMap<String, NPC> NPC_List;
 		
-	}
+}
 	
-	enum equip_region
-	{
-		head, body, ring, amulet, one_handed, two_handed, not_equippable
-	}
-	
-	
-	class null_person extends NPC
-	{
-		null_person()
-		{
-			super(new Start_Location(), "null");
-		}
-	}
+enum equip_region
+{
+	head, body, ring, amulet, one_handed, two_handed, not_equippable
+}
 	

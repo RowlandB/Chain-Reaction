@@ -15,7 +15,7 @@ class Player_Character extends Person
 //note: the commented-out items are POC items. They can be ignored
 		my_inventory.add_new_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
 //		my_inventory.add_new_item(new item());
-		my_inventory.add_new_item(new health_potion());
+//		my_inventory.add_new_item(new health_potion());
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
@@ -261,7 +261,7 @@ class Player_Character extends Person
 	
 	public void remove_action(Action one_to_remove)
 	{
-		what_do.remove(one_to_remove);
+		what_do.remove(one_to_remove.description);
 	}
 	
 	
