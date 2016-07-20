@@ -549,7 +549,7 @@ class Player_Character extends Person
 		{
 			how_many = how_many*(-1);
 			total_weight -= the_items.get(which).get_weight();
-			the_items.get(which).change_quantity(how_many);
+			the_items.get(which).increase_quantity(how_many);
 		}
 		
 		private void remove_all_of_item(int which)
@@ -830,26 +830,6 @@ abstract class Fact
 	
 	protected static int unique_id = 1;
 }
-
-
-///////////////////////////////
-abstract class Action
-{	
-	Action(){}
-	
-	public String Get_Description(){return description;}
-	
-	public boolean can_be_done(){return true;}
-	public void What_Happens(){}
-	public String description;
-
-	//TODO: add support for long/short actions
-	//private double time_to_completion
-}
-
-
-
-
 
 
 //////////////////////////////

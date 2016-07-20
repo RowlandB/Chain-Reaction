@@ -20,7 +20,7 @@ class My_Game_Initializer extends Game_Initializer
 	{
 			/////Locations
 			Location Blacksmith = new Forge("Blacksmith's");
-			Location Bobs_Fields = new Field("Bob's Field");
+			Location Bobs_Fields = new Bobs_Field("Bob's Field");
 			Location Keshies_Castle = new Castle("Keshie's Castle");
 			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
 			Location Bobs_Hovel = new Hovel("Bob's Hovel");
@@ -91,19 +91,13 @@ class Bob extends Commoner
 			steal_wine()
 			{
 				description = " does nothing suspicious";
-				likelihood = 1;
+				likelihood = 3;
 			}
 			
-			protected int how_likely()
+			@Override
+			public boolean can_be_done()
 			{
-				if(helpers.get_PC().Get_Location().equals(current_location) && helpers.get_PC().has_item("wine"))
-				{
-					return likelihood;
-				}
-				else
-				{
-					return -1000;
-				}
+				return (helpers.get_PC().Get_Location().equals(current_location) && helpers.get_PC().has_item("wine"));
 			}
 			
 			public void What_Happens()
@@ -155,9 +149,32 @@ class Noble_Hank extends Noble
 		
 		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
 		
+		potential_actions.add(new drink_wine());
+		
 		personal_greeting = "Do you have any wine?";
 	}
 	
+	class drink_wine extends NPC_Action
+	{
+		drink_wine()
+		{
+			description = "drinks some wine";
+			likelihood = 20;
+		}
+		
+		public boolean can_be_done()
+		{
+			return has("wine");
+		}
+		
+		@Override
+		public void What_Happens()
+		{
+			mood = Mood.happy;
+			
+			//TODO decrement wine
+		}
+	}
 }
 
 ///////////////////////////////
@@ -178,12 +195,40 @@ class Forge extends Location
 }
 
 ///////////////////////////////
-class Field extends Location
+class Bobs_Field extends Fields
 {
-	Field(String name)
+	Bobs_Field(String name)
 	{
-		super(name);
+		super(name, new corn(), 5); //TODO extend this to a more realistic number
 		flammability = 90;
+	}
+}
+
+class corn extends consumable_item
+{
+	corn()
+	{
+		ability = new eat_tasty_corn();
+		rules_description = ability.description;
+
+		name = "corn";
+		flavor_text = "a cob with corn on it";
+		weight = 1;
+		value = 1;
+	}
+	
+	class eat_tasty_corn extends consume
+	{
+		eat_tasty_corn()
+		{
+			description = "eat some tasty corn";
+		}
+		
+		public void Other_Happenings()
+		{
+			helpers.output("Yum! That was delicious!");
+			helpers.finish_output();
+		}
 	}
 }
 
@@ -259,16 +304,69 @@ class Dungeon extends Location
 	Dungeon(String name)
 	{
 		super(name);
-		accessibility = 20;
+		accessibility = 20;		
 		
-		torch blarg = new torch();
-		
-		
-		unattended_stuff.put("torch", blarg);
+		unattended_stuff.put("torch", new torch());
 	}
 	
 	
 	
+}
+
+class Fields extends Location
+{
+	Fields(String name, item grow_thing, int how_quickly)
+	{
+		super(name);
+		thing_that_grows = grow_thing;
+		time_it_takes = how_quickly;
+		time_till_done = how_quickly;
+		growable = true;
+	}
+	
+	@Override
+	public boolean burn_location()
+	{
+		unattended_stuff.remove(thing_that_grows.get_name());
+		return super.burn_location();
+	}
+	
+	@Override
+	public void time_passes()
+	{
+		super.time_passes();
+		if(!burning)
+		{
+			grow();
+		}	
+	}
+	
+	void grow()
+	{
+		time_till_done--;
+		if(time_till_done==0)
+		{
+			time_till_done = time_it_takes;
+			harvest();
+		}
+	}
+	
+	void harvest()
+	{
+		if(unattended_stuff.containsKey(thing_that_grows.get_name()))
+		{
+			unattended_stuff.get(thing_that_grows.get_name()).increase_quantity(1);
+		}
+		else
+		{
+			unattended_stuff.put(thing_that_grows.get_name(), thing_that_grows);
+		}
+	}
+	
+	protected int time_till_done;
+	protected int time_it_takes;
+	protected item thing_that_grows;
+	private boolean growable;
 }
 
 class health_potion extends consumable_item
@@ -316,14 +414,6 @@ class Dungeon_Fact extends Fact
 	}
 }
 
-class boring_fact extends Fact
-{
-	boring_fact(String descr, String hf)
-	{
-		super(descr,hf);
-	}
-}
-
 class Hank_likes_wine extends Fact
 {
 	Hank_likes_wine()
@@ -344,7 +434,7 @@ class Hank_likes_wine extends Fact
 			helpers.get_PC().decrement_consumable("wine");
 			
 			helpers.Get_Person_by_name("Hank").change_friendliness(20);
-			
+			helpers.Get_Person_by_name("Hank").add_item(new wine());
 
 			helpers.get_PC().remove_action(myself);
 		}
@@ -442,7 +532,11 @@ class torch extends consumable_item
 			else
 			{
 				item which_item = helpers.get_PC().PC_select_item();
-				helpers.get_PC().remove_item(which_item);
+				
+				if(which_item.isFlammable())
+				{
+					helpers.get_PC().remove_item(which_item);
+				}
 			}
 		}
 	}

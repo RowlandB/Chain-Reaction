@@ -39,6 +39,14 @@ abstract public class Game_Initializer
 	}
 }
 
+class boring_fact extends Fact
+{
+	boring_fact(String descr, String hf)
+	{
+		super(descr,hf);
+	}
+}
+
 //////////////////////////////
 class helpers
 {
