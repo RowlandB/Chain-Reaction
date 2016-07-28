@@ -1,4 +1,3 @@
-import java.util.Random;
 import java.util.HashMap;
 
 
@@ -11,49 +10,6 @@ public class Main
 		
 		
 		blarg.Play_Game();
-	}
-}
-
-class My_Game_Initializer extends Game_Initializer
-{
-	public void Initialize(HashMap<String, Location> places, HashMap<String, NPC> NPCs)
-	{
-			/////Locations
-			Location Blacksmith = new Forge("Blacksmith's");
-			Location Bobs_Fields = new Bobs_Field("Bob's Field");
-			Location Keshies_Castle = new Castle("Keshie's Castle");
-			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
-			Location Bobs_Hovel = new Hovel("Bob's Hovel");
-			Location Tavern = new Tavern("The Tavern");
-			places.put("Blacksmith's", Blacksmith);
-			places.put("Bob's Field", Bobs_Fields);
-			places.put("Keshie's Castle", Keshies_Castle);
-			places.put("Dungeon Below Keshie's Castle", Dungeon);
-			places.put("Bob's Hovel", Bobs_Hovel);
-			places.put("The Tavern", Tavern);			
-			
-			
-			////Persons
-			NPC Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
-			Bobs_Fields.AddPerson(Generic_Peasant);
-			NPCs.put("Bob", Generic_Peasant);
-			
-			NPC Generic_Noble = new Noble_Kesh(Keshies_Castle);
-			Keshies_Castle.AddPerson(Generic_Noble);
-			NPCs.put("Noble Kesh", Generic_Noble);
-			
-			NPC Angry_Peasant = new Norton(Tavern);
-			Tavern.AddPerson(Angry_Peasant);
-			NPCs.put("Norton", Angry_Peasant);
-			
-			NPC Hank = new Noble_Hank(Keshies_Castle);
-			Keshies_Castle.AddPerson(Hank);
-			NPCs.put("Hank", Hank);
-	}
-
-	public Player_Character new_Player()
-	{
-		return new Player_Character(new Start_Location());
 	}
 }
 
@@ -97,7 +53,7 @@ class Bob extends Commoner
 			@Override
 			public boolean can_be_done()
 			{
-				return (helpers.get_PC().Get_Location().equals(current_location) && helpers.get_PC().has_item("wine"));
+				return (helpers.get_PC().getCurrent_location().equals(current_location) && helpers.get_PC().has_item("wine"));
 			}
 			
 			public void What_Happens()
@@ -107,91 +63,11 @@ class Bob extends Commoner
 			
 		}
 		
-		this.potential_actions.add(new steal_wine());
+		this.potential_actions.put("steal wine", new steal_wine());
 		
 		personal_greeting = "'allo, govna'";
 	}
 	
-}
-
-class Norton extends Commoner
-{
-	Norton(Location L)
-	{
-		super(L,"Norton");
-		
-		this.mood=Mood.angry;
-		this.pc_friendlyness_level=-1;
-		
-		personal_greeting = "hey, you git";
-	}	
-}
-
-
-class Noble_Kesh extends Noble
-{
-	Noble_Kesh(Location L)
-	{
-		super(L,"High Lord Kesh of No-Funnington");
-		
-		knowledge_base.put("goblins", new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
-		knowledge_base.put("dungeon", new Dungeon_Fact());
-	
-		personal_greeting = "greetings, peasant";
-	}
-}
-
-class Noble_Hank extends Noble
-{
-	Noble_Hank(Location L)
-	{
-		super(L, "Hank");
-		
-		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
-		
-		potential_actions.add(new drink_wine());
-		
-		personal_greeting = "Do you have any wine?";
-	}
-	
-	class drink_wine extends NPC_Action
-	{
-		drink_wine()
-		{
-			description = "drinks some wine";
-			likelihood = 20;
-		}
-		
-		public boolean can_be_done()
-		{
-			return has("wine");
-		}
-		
-		@Override
-		public void What_Happens()
-		{
-			mood = Mood.happy;
-			
-			//TODO decrement wine
-		}
-	}
-}
-
-///////////////////////////////
-class Start_Location extends Location
-{
-
-}
-
-///////////////////////////////
-class Forge extends Location
-{
-	Forge(String name)
-	{
-		super(name);
-		flammability = 20;
-	} 
-
 }
 
 ///////////////////////////////
@@ -203,6 +79,37 @@ class Bobs_Field extends Fields
 		flammability = 90;
 	}
 }
+
+///////////////////////////////
+class Castle extends Location
+{
+	Castle(String name)
+	{
+		super(name);
+		Action laugh_at_plebs = new oppress_peasants();
+		options.put("laugh_at_plebs", laugh_at_plebs);
+	}
+
+	class oppress_peasants extends Action
+	{
+		oppress_peasants()
+		{
+			description = "Oppress some peasants";
+		}
+	
+		public boolean can_be_done()
+		{
+			return helpers.get_PC().Player_is_Weak();
+		}
+		
+		public void What_Happens()
+		{
+			helpers.output("Haha! Those fools should have been born with money. Let's make them fight for coppers some more!");
+			helpers.finish_output();
+		}
+	}
+}
+
 
 class corn extends consumable_item
 {
@@ -233,72 +140,6 @@ class corn extends consumable_item
 }
 
 ///////////////////////////////
-class Hovel extends Location
-{
-	Hovel(String name)
-	{
-		super(name);
-		flammability = 75;
-	}
-}
-
-///////////////////////////////
-class Tavern extends Location
-{
-	Tavern(String name)
-	{
-		super(name);
-		
-		wine unattended_wine = new wine();
-		unattended_wine.set_stolen(true);
-		unattended_wine.set_count(100);
-		
-		unattended_stuff.put("wine", unattended_wine);
-		
-		flammability = 30;
-	}
-	
-	@Override
-	protected int get_flammability()
-	{
-		int how_much = unattended_stuff.get("wine").get_count();
-		
-		return Math.max(0, how_much);
-	}
-}
-
-
-///////////////////////////////
-class Castle extends Location
-{
-	Castle(String name)
-	{
-		super(name);
-		Action laugh_at_plebs = new oppress_peasants();
-		options.put("laugh_at_plebs", laugh_at_plebs);
-	}
-
-	class oppress_peasants extends Action
-	{
-		oppress_peasants()
-		{
-			description = "Oppress some peasants";
-		}
-	
-		public void What_Happens()
-		{
-			helpers.output("Haha! Those fools should have been born with money. Let's make them fight for coppers some more!");
-			helpers.finish_output();
-		}
-		
-		public boolean can_be_done()
-		{
-			return helpers.get_PC().Player_is_Weak();
-		}
-	}
-}
-
-///////////////////////////////
 class Dungeon extends Location
 {
 	Dungeon(String name)
@@ -313,6 +154,19 @@ class Dungeon extends Location
 	
 }
 
+class Dungeon_Fact extends Fact
+{
+	Dungeon_Fact()
+	{
+		super("dungeons","We have a dungeon. You should visit it some time.");
+	}
+	
+	public void on_learn()
+	{
+		helpers.get_PC().learn_about_location("Dungeon Below Keshie's Castle", 25);
+	}
+}
+
 class Fields extends Location
 {
 	Fields(String name, item grow_thing, int how_quickly)
@@ -321,7 +175,6 @@ class Fields extends Location
 		thing_that_grows = grow_thing;
 		time_it_takes = how_quickly;
 		time_till_done = how_quickly;
-		growable = true;
 	}
 	
 	@Override
@@ -366,7 +219,67 @@ class Fields extends Location
 	protected int time_till_done;
 	protected int time_it_takes;
 	protected item thing_that_grows;
-	private boolean growable;
+}
+
+///////////////////////////////
+class Forge extends Location
+{
+	Forge(String name)
+	{
+		super(name);
+		flammability = 20;
+	} 
+
+}
+
+class Hank_likes_wine extends Fact
+{
+	Hank_likes_wine()
+	{
+		super("wine", "Hank *really* likes wine. You could say he has a hankering for it.");
+	}
+	
+	public void on_learn()
+	{
+		helpers.get_PC().add_action(new give_Hank_wine());
+	}
+	
+	
+	class give_Hank_wine extends Action
+	{
+		give_Hank_wine()
+		{
+			description = "give Hank some wine";
+		}
+		
+		public boolean can_be_done()
+		{
+			boolean has_wine = helpers.get_PC().has_item("wine");
+			if(has_wine)
+			{
+				boolean same_location = helpers.get_PC().getCurrent_location().has_present("Hank");
+				if(same_location)
+				{
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		public void What_Happens()
+		{
+			//player loses wine
+			helpers.get_PC().decrement_consumable("wine");
+			
+			helpers.Get_Person_by_name("Hank").increase_friendliness(helpers.get_PC(), 20);
+			helpers.Get_Person_by_name("Hank").add_item(new wine());
+
+			//helpers.get_PC().remove_action(myself);
+		}
+		
+		Action myself = this;
+	}
 }
 
 class health_potion extends consumable_item
@@ -399,95 +312,174 @@ class health_potion extends consumable_item
 
 }
 
-
-
-class Dungeon_Fact extends Fact
+///////////////////////////////
+class Hovel extends Location
 {
-	Dungeon_Fact()
+	Hovel(String name)
 	{
-		super("dungeons","We have a dungeon. You should visit it some time.");
-	}
-	
-	public void on_learn()
-	{
-		helpers.get_PC().learn_about_location("Dungeon Below Keshie's Castle", 25);
+		super(name);
+		flammability = 75;
 	}
 }
 
-class Hank_likes_wine extends Fact
+
+class My_Game_Initializer extends Game_Initializer
 {
-	Hank_likes_wine()
+	public void Initialize(HashMap<String, Location> places, HashMap<String, NPC> NPCs)
 	{
-		super("wine", "Hank *really* likes wine. You could say he has a hankering for it.");
+			/////Locations
+			Location Blacksmith = new Forge("Blacksmith's");
+			Location Bobs_Fields = new Bobs_Field("Bob's Field");
+			Location Keshies_Castle = new Castle("Keshie's Castle");
+			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
+			Location Bobs_Hovel = new Hovel("Bob's Hovel");
+			Location Tavern = new Tavern("The Tavern");
+			places.put("Blacksmith's", Blacksmith);
+			places.put("Bob's Field", Bobs_Fields);
+			places.put("Keshie's Castle", Keshies_Castle);
+			places.put("Dungeon Below Keshie's Castle", Dungeon);
+			places.put("Bob's Hovel", Bobs_Hovel);
+			places.put("The Tavern", Tavern);			
+			
+			
+			////Persons
+			NPC Generic_Peasant = new Bob(Bobs_Fields, Bobs_Hovel);
+			Bobs_Fields.AddPerson(Generic_Peasant);
+			NPCs.put("Bob", Generic_Peasant);
+			
+			NPC Generic_Noble = new Noble_Kesh(Keshies_Castle);
+			Keshies_Castle.AddPerson(Generic_Noble);
+			NPCs.put("Noble Kesh", Generic_Noble);
+			
+			NPC Angry_Peasant = new Norton(Tavern);
+			Tavern.AddPerson(Angry_Peasant);
+			NPCs.put("Norton", Angry_Peasant);
+			
+			NPC Hank = new Noble_Hank(Keshies_Castle);
+			Keshies_Castle.AddPerson(Hank);
+			NPCs.put("Hank", Hank);
+			
+			NPC Doug = new Doug(Keshies_Castle, Hank, Generic_Noble);
+			Keshies_Castle.AddPerson(Doug);
+			NPCs.put("Doug", Doug);
+	}
+
+	public Player_Character new_Player()
+	{
+		return new Player_Character(new Start_Location());
+	}
+}
+
+class Doug extends Body_Guard
+{
+	Doug(Location L, Person who_support, Person test_who_hate)
+	{
+		super(L, "Doug");
+		increase_friendliness(who_support, 5);
+		increase_friendliness(test_who_hate, -10);
+		
+		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
+		
+		personal_greeting = "Uh do wut "  + who_support.get_name() + " tells muh to do";
+	}
+}
+
+class Noble_Hank extends Noble
+{
+	Noble_Hank(Location L)
+	{
+		super(L, "Hank");
+		
+		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
+		
+		potential_actions.put("drink wine", new drink_wine());
+		
+		personal_greeting = "Do you have any wine?";
 	}
 	
-	class give_Hank_wine extends Action
+	class drink_wine extends NPC_Action
 	{
-		give_Hank_wine()
+		drink_wine()
 		{
-			description = "give Hank some wine";
-		}
-		
-		public void What_Happens()
-		{
-			//player loses wine
-			helpers.get_PC().decrement_consumable("wine");
-			
-			helpers.Get_Person_by_name("Hank").change_friendliness(20);
-			helpers.Get_Person_by_name("Hank").add_item(new wine());
-
-			helpers.get_PC().remove_action(myself);
+			description = "drinks some wine";
+			likelihood = 20;
 		}
 		
 		public boolean can_be_done()
 		{
-			boolean has_wine = helpers.get_PC().has_item("wine");
-			if(has_wine)
-			{
-				boolean same_location = helpers.get_PC().Get_Location().has_present("Hank");
-				if(same_location)
-				{
-					return true;
-				}
-			}
-			
-			return false;
+			return has("wine");
 		}
 		
-		Action myself = this;
-	}
-	
-	
-	public void on_learn()
-	{
-		helpers.get_PC().add_action(new give_Hank_wine());
+		@Override
+		public void What_Happens()
+		{
+			mood = Mood.happy;
+			
+			//decrement wine
+			if(helpers.random(1, 3)==1)
+			{
+				decrease_item("wine", 1);
+			}
+		}
 	}
 }
 
-class wine extends consumable_item
+class Noble_Kesh extends Noble
 {
-	wine()
+	Noble_Kesh(Location L)
 	{
-		ability = new get_drunk();
-		rules_description = ability.description;
-
-		name = "wine";
-		flavor_text = "well, it's better than water";
-		weight = 0;
-		value = 10;
+		super(L,"High Lord Kesh of No-Funnington");
+		
+		knowledge_base.put("goblins", new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
+		knowledge_base.put("dungeon", new Dungeon_Fact());
+	
+		personal_greeting = "greetings, peasant";
 	}
+}
 
-	class get_drunk extends consume
+class Norton extends Commoner
+{
+	Norton(Location L)
 	{
-		get_drunk()
-		{
-			description = "you drink, and you get drunk";
-		}
+		super(L,"Norton");
+		
+		this.mood=Mood.angry;
+		this.increase_friendliness(helpers.get_PC(), -1);
+		
+		personal_greeting = "hey, you git";
+	}	
+}
 
-		protected void Other_Happenings()
-		{
-			helpers.get_PC().add_drunkeness(5);
-		}
+
+
+///////////////////////////////
+class Start_Location extends Location
+{
+
+}
+
+///////////////////////////////
+class Tavern extends Location
+{
+	Tavern(String name)
+	{
+		super(name);
+		
+		wine unattended_wine = new wine();
+		unattended_wine.set_stolen(true);
+		unattended_wine.set_count(100);
+		
+		unattended_stuff.put("wine", unattended_wine);
+		
+		flammability = 30;
+	}
+	
+	@Override
+	protected int get_flammability()
+	{
+		int how_much = unattended_stuff.get("wine").get_count();
+		
+		return Math.max(0, how_much);
 	}
 }
 
@@ -522,7 +514,7 @@ class torch extends consumable_item
 			
 			if(which==1)
 			{
-				Location here = helpers.get_PC().Get_Location();
+				Location here = helpers.get_PC().getCurrent_location();
 				
 				if(!here.burn_location())
 				{
@@ -538,6 +530,33 @@ class torch extends consumable_item
 					helpers.get_PC().remove_item(which_item);
 				}
 			}
+		}
+	}
+}
+
+class wine extends consumable_item
+{
+	wine()
+	{
+		ability = new get_drunk();
+		rules_description = ability.description;
+
+		name = "wine";
+		flavor_text = "well, it's better than water";
+		weight = 0;
+		value = 10;
+	}
+
+	class get_drunk extends consume
+	{
+		get_drunk()
+		{
+			description = "you drink, and you get drunk";
+		}
+
+		protected void Other_Happenings()
+		{
+			helpers.get_PC().add_drunkeness(5);
 		}
 	}
 }

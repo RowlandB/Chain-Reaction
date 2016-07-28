@@ -1,8 +1,6 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Random;
 import java.util.HashMap;
-import java.util.Vector;
+import java.util.List;
 
 
 ///////////////////////////////
@@ -20,6 +18,9 @@ class Player_Character extends Person
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
 		my_inventory.add_new_item(new torch());
+		wine starting_wine = new wine();
+		starting_wine.set_count(10);
+		add_item(starting_wine);
 		
 		this.my_knowledge = new Knowledge();
 		
@@ -34,7 +35,7 @@ class Player_Character extends Person
 		this.location_knowledge = new mobility_controller();
 		
 		this.name = "Jon Snow";
-		this.here = Start;
+		this.current_location = Start;
 		this.current_hp = 100;
 		this.total_hp = 100;
 		this.drunk = 0;
@@ -81,7 +82,7 @@ class Player_Character extends Person
 			}
 		}
 		
-		HashMap<String, Action> other_options = here.Get_Actions();
+		HashMap<String, Action> other_options = current_location.Get_Actions();
 		
 		for(Action possible_action: other_options.values())
 		{
@@ -136,7 +137,7 @@ class Player_Character extends Person
 		public void What_Happens()
 		{
 			String people;
-			ArrayList<NPC> everyone =  new ArrayList<NPC>(here.GetEveryone().values());
+			ArrayList<NPC> everyone = new ArrayList<NPC>(current_location.GetEveryone().values());
 			if(everyone.size() == 0)
 			{
 				people = "There's no one to talk to! (unless you want to talk to yourself)";
@@ -148,7 +149,7 @@ class Player_Character extends Person
 				helpers.output("With whom would you like to speak?");
 				for(int x=0; x< everyone.size(); x++)
 				{
-					helpers.output_partial_list(x+1, everyone.get(x).Get_Name());
+					helpers.output_partial_list(x+1, everyone.get(x).get_name());
 				}
 				helpers.finish_output();
 				
@@ -279,7 +280,7 @@ class Player_Character extends Person
 	
 	private void Move_Character(Location where_to)
 	{
-		here = where_to;
+		current_location = where_to;
 	}
 	
 	protected void time_passes()
@@ -291,12 +292,6 @@ class Player_Character extends Person
 	}
 	
 	////////////////
-	
-	
-	public Location Get_Location()
-	{
-		return this.here;
-	}
 	
 	public void gain_health(int how_much)
 	{
@@ -358,16 +353,17 @@ class Player_Character extends Person
 		my_inventory.remove_item(which, 100000);
 	}
 	
-	public void take_from(item from_where, int how_many)
+	@Override
+	public void gain(item new_item, int how_many)
 	{
-		int x = my_inventory.check_item(from_where.get_name());
+		int x = my_inventory.check_item(new_item.get_name());
 		if(x >= 0)
 		{
 			my_inventory.add_more(x, how_many);
 		}
 		else
 		{
-			my_inventory.add_new_item(new item(from_where, how_many));
+			my_inventory.add_new_item(new item(new_item, how_many));
 		}
 	}
 	
@@ -386,12 +382,19 @@ class Player_Character extends Person
 		
 	}
 	
-	private void die()
+	protected void die()
 	{
 		// TODO Auto-generated method stub
 		
 	}
 
+	public int get_fight_power()
+	{
+		//TODO
+		return 100;
+	}
+	
+	
 	//////////////////////////////////////
 	class Inventory
 	{
@@ -704,6 +707,12 @@ class Player_Character extends Person
 		private ArrayList<item> the_items;
 	}
 
+	@Override
+	public boolean has_item(item what)
+	{
+		return has_item(what.get_name());
+	}
+	
 	public boolean has_item(String item_name)
 	{
 		if(my_inventory.check_item(item_name) >= 0)
@@ -770,6 +779,12 @@ class Player_Character extends Person
 		
 		private ArrayList<Fact> the_Facts;
 	}
+
+	@Override
+	public Person get_hate()
+	{
+		return null;
+	}
 	
 //////////////////////////////////////
 
@@ -777,12 +792,10 @@ class Player_Character extends Person
 	private Knowledge my_knowledge;
 	private Inventory my_inventory;
 	private HashMap<String, Action> what_do;
-	private Location here;
 	private mobility_controller location_knowledge;
 	private int drunk;
 	private int stealth;
-	
-	
+
 }
 
 ///////////////////////////////

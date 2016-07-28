@@ -15,29 +15,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 
-//////////////////////////////
-//Exactly what it says on the tin: handles input and output
-abstract class IO_Object
-{
-	public String Input_String(){
-		return "balls. This shouldn't have been called";
-	}
-	
-	public void Output_String(String output){}
-	
-	public void Output_Batch(){}
-	
-	public void Partial_List_Output_String(int which, String Output)
-	{
-		Output_String(Integer.toString(which) + ") " + Output);
-	}
-
-	public void Partial_List_Output_String(int which, String Output, boolean b)
-	{
-		Output_String(Integer.toString(which) + ") " + Output);
-	}
-}
-
 //uses JFrame + Buttons
 class Frame_Button_IO_Object extends IO_Object
 {
@@ -132,6 +109,12 @@ class Frame_Button_IO_Object extends IO_Object
 		}
 	}
 	
+	public void Output_Batch()
+	{
+		button_holder.revalidate();
+		button_holder.repaint();
+	}
+	
 	public void Output_String(String output)
 	{
 		previous_output = previous_output + output + "\n";
@@ -141,21 +124,6 @@ class Frame_Button_IO_Object extends IO_Object
 		
 		//header_text.setCaretPosition(output.length());
 		log = log + output;
-	}
-	
-	private void Delete_All_Buttons()
-	{
-		for(int x=0; x<button_list.size(); x++)
-		{
-			button_holder.remove(button_list.get(x));
-		}
-		button_list.removeAllElements();
-	}
-	
-	public void Output_Batch()
-	{
-		button_holder.revalidate();
-		button_holder.repaint();
 	}
 	
 	public void Partial_List_Output_String(int which, String Output)
@@ -183,6 +151,15 @@ class Frame_Button_IO_Object extends IO_Object
 		button_list.add(potential_option);
 		
 		log = log + Integer.toString(which) + ") " + Output;
+	}
+	
+	private void Delete_All_Buttons()
+	{
+		for(int x=0; x<button_list.size(); x++)
+		{
+			button_holder.remove(button_list.get(x));
+		}
+		button_list.removeAllElements();
 	}
 	
 	Vector<JButton> button_list;
@@ -290,11 +267,6 @@ class Frame_IO_Object extends IO_Object
 		return new_input_text;
 	}
 	
-	public void Output_String(String Output)
-	{
-		buffer_text = buffer_text + Output  + "\r\n";
-	}
-	
 	public void Output_Batch()
 	{
 		last_text = buffer_text;
@@ -305,6 +277,11 @@ class Frame_IO_Object extends IO_Object
 		output_text.setCaretPosition(current_output_text.length());
 	}
 	
+	public void Output_String(String Output)
+	{
+		buffer_text = buffer_text + Output  + "\r\n";
+	}
+	
 	boolean ready_for_input;
 	String buffer_text;
 	String current_output_text;
@@ -313,6 +290,29 @@ class Frame_IO_Object extends IO_Object
 	TextField input_text;
 	TextArea output_text;
 	JFrame window;
+}
+
+//////////////////////////////
+//Exactly what it says on the tin: handles input and output
+abstract class IO_Object
+{
+	public String Input_String(){
+		return "balls. This shouldn't have been called";
+	}
+	
+	public void Output_Batch(){}
+	
+	public void Output_String(String output){}
+	
+	public void Partial_List_Output_String(int which, String Output)
+	{
+		Output_String(Integer.toString(which) + ") " + Output);
+	}
+
+	public void Partial_List_Output_String(int which, String Output, boolean b)
+	{
+		Output_String(Integer.toString(which) + ") " + Output);
+	}
 }
 
 //uses System IO

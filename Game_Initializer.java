@@ -47,6 +47,11 @@ class boring_fact extends Fact
 	}
 }
 
+enum equip_region
+{
+	head, body, ring, amulet, one_handed, two_handed, not_equippable
+}
+	
 //////////////////////////////
 class helpers
 {
@@ -63,6 +68,16 @@ class helpers
 		Location_List = places;
 	}
 	
+	public static int Get_Time()
+	{
+		return time_of_day;
+	}
+
+	public static void output_partial_list(int which, String output, boolean stolen)
+	{
+		IO.Partial_List_Output_String(which, output, stolen);
+	}
+
 	public static void time_passes()
 	{
 		PC.time_passes();
@@ -77,35 +92,34 @@ class helpers
 		}
 		increment_time();
 	}
-
-	private static void increment_time()
+	
+	static void finish_output()
 	{
-		time_of_day++;
-		if(time_of_day>23)
-		{
-			time_of_day=time_of_day-24;
-		}
-	}
-
-	public static int Get_Time()
-	{
-		return time_of_day;
+		IO.Output_String("");
+		IO.Output_Batch();
 	}
 	
-	//Assumption: We've already output a question with 'size' number of choices
-	//Yells at the player until they give a viable option (one from the list)
-	static int which_one(int size)
+	static Location Get_Location_by_name(String Location_Name) throws InvalidParameterException
 	{
-		int x = Integer.parseInt(IO.Input_String());
-		
-		while(x > size || x < 1)
+		for(int x=0; x<Location_List.size(); x++)
 		{
-			helpers.output("That's not a selectable option. Try again");
-			helpers.finish_output();
-			x = Integer.parseInt(IO.Input_String());
+			if(Location_List.get(x).Where().equals(Location_Name))
+			{
+				return Location_List.get(x);
+			}
 		}
 		
-		return x - 1;
+		throw new InvalidParameterException();
+	}
+	
+	static Player_Character get_PC()
+	{
+		return PC;
+	}
+	
+	static NPC Get_Person_by_name(String NPC_name)
+	{
+		return NPC_List.get(NPC_name);
 	}
 	
 	static String input()
@@ -123,22 +137,6 @@ class helpers
 		IO.Partial_List_Output_String(which, output);
 	}
 	
-	public static void output_partial_list(int which, String output, boolean stolen)
-	{
-		IO.Partial_List_Output_String(which, output, stolen);
-	}
-	
-	static void finish_output()
-	{
-		IO.Output_String("");
-		IO.Output_Batch();
-	}
-	
-	static Player_Character get_PC()
-	{
-		return PC;
-	}
-	
 	//inclusive
 	static int random(int min, int max)
 	{
@@ -151,22 +149,29 @@ class helpers
 	//return Location_List;
 	//}
 	
-	static Location Get_Location_by_name(String Location_Name) throws InvalidParameterException
+	//Assumption: We've already output a question with 'size' number of choices
+	//Yells at the player until they give a viable option (one from the list)
+	static int which_one(int size)
 	{
-		for(int x=0; x<Location_List.size(); x++)
+		int x = Integer.parseInt(IO.Input_String());
+		
+		while(x > size || x < 1)
 		{
-			if(Location_List.get(x).Where().equals(Location_Name))
-			{
-				return Location_List.get(x);
-			}
+			helpers.output("That's not a selectable option. Try again");
+			helpers.finish_output();
+			x = Integer.parseInt(IO.Input_String());
 		}
 		
-		throw new InvalidParameterException();
+		return x - 1;
 	}
 	
-	static NPC Get_Person_by_name(String NPC_name)
+	private static void increment_time()
 	{
-		return NPC_List.get(NPC_name);
+		time_of_day++;
+		if(time_of_day>23)
+		{
+			time_of_day=time_of_day-24;
+		}
 	}
 		
 		private static int time_of_day;
@@ -175,10 +180,5 @@ class helpers
 		static HashMap<String, Location> Location_List;
 		static HashMap<String, NPC> NPC_List;
 		
-}
-	
-enum equip_region
-{
-	head, body, ring, amulet, one_handed, two_handed, not_equippable
 }
 	
