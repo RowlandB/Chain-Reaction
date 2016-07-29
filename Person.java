@@ -15,6 +15,8 @@ public abstract class Person
 		return current_location;
 	}
 	
+	abstract public void react_to_oppressing_peasants(Person who);
+	
 	abstract public boolean has_item(item what);
 	abstract public void gain(item what, int how_much);	
 	abstract public void injure(int x);
@@ -30,6 +32,7 @@ public abstract class Person
 	protected Location current_location;
 	protected String name;
 	protected int total_hp;
+	
 	
 }
 

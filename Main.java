@@ -47,7 +47,7 @@ class Bob extends Commoner
 			steal_wine()
 			{
 				description = " does nothing suspicious";
-				likelihood = 3;
+				likelihood = 10;
 			}
 			
 			@Override
@@ -106,6 +106,13 @@ class Castle extends Location
 		{
 			helpers.output("Haha! Those fools should have been born with money. Let's make them fight for coppers some more!");
 			helpers.finish_output();
+			
+			for(Person guy : who_is_here.values())
+			{
+				//TODO
+				//guy.know_about_oppressing_peasants(helpers.get_PC());
+				guy.react_to_oppressing_peasants(helpers.get_PC());
+			}
 		}
 	}
 }
@@ -272,8 +279,9 @@ class Hank_likes_wine extends Fact
 			//player loses wine
 			helpers.get_PC().decrement_consumable("wine");
 			
-			helpers.Get_Person_by_name("Hank").increase_friendliness(helpers.get_PC(), 20);
-			helpers.Get_Person_by_name("Hank").add_item(new wine());
+			NPC Hank = helpers.Get_Person_by_name("Hank");
+			Hank.alter_liking(helpers.get_PC(), 30);
+			Hank.add_item(new wine());
 
 			//helpers.get_PC().remove_action(myself);
 		}
@@ -375,8 +383,8 @@ class Doug extends Body_Guard
 	Doug(Location L, Person who_support, Person test_who_hate)
 	{
 		super(L, "Doug");
-		increase_friendliness(who_support, 5);
-		increase_friendliness(test_who_hate, -10);
+		this.alter_liking(who_support, 5);
+		//increase_friendliness(test_who_hate, -10);
 		
 		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
 		
@@ -402,7 +410,7 @@ class Noble_Hank extends Noble
 		drink_wine()
 		{
 			description = "drinks some wine";
-			likelihood = 20;
+			likelihood = 30;
 		}
 		
 		public boolean can_be_done()
@@ -444,7 +452,6 @@ class Norton extends Commoner
 		super(L,"Norton");
 		
 		this.mood=Mood.angry;
-		this.increase_friendliness(helpers.get_PC(), -1);
 		
 		personal_greeting = "hey, you git";
 	}	

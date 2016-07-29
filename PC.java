@@ -47,6 +47,9 @@ class Player_Character extends Person
 		what_do.put(new_action.Get_Description(),new_action);
 	}
 	
+	@Override
+	public void react_to_oppressing_peasants(Person who){}//nothing because I'm doing it
+	
 	//displays at all the actions the player can do
 	public void InteractWithEnvironment()
 	{
@@ -788,7 +791,6 @@ class Player_Character extends Person
 	
 //////////////////////////////////////
 
-	private String name;
 	private Knowledge my_knowledge;
 	private Inventory my_inventory;
 	private HashMap<String, Action> what_do;
