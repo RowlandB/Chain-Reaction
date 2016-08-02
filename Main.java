@@ -42,16 +42,15 @@ class Bob extends Commoner
 		*/
 		
 		
-		class steal_wine extends NPC_Action
+		class steal_wine extends Action implements NPC_Action
 		{
 			steal_wine()
 			{
 				description = " does nothing suspicious";
-				likelihood = 10;
 			}
 			
 			@Override
-			public boolean can_be_done()
+			public boolean can_be_done(Person by_whom)
 			{
 				return (helpers.get_PC().getCurrent_location().equals(current_location) && helpers.get_PC().has_item("wine"));
 			}
@@ -59,6 +58,12 @@ class Bob extends Commoner
 			public void What_Happens()
 			{
 				helpers.get_PC().steal(new wine());
+			}
+
+			@Override
+			public int how_likely()
+			{
+				return 10;
 			}
 			
 		}
@@ -97,9 +102,9 @@ class Castle extends Location
 			description = "Oppress some peasants";
 		}
 	
-		public boolean can_be_done()
+		public boolean can_be_done(Person by_whom)
 		{
-			return helpers.get_PC().Player_is_Weak();
+			return by_whom.is_Weak();
 		}
 		
 		public void What_Happens()
@@ -157,8 +162,6 @@ class Dungeon extends Location
 		unattended_stuff.put("torch", new torch());
 	}
 	
-	
-	
 }
 
 class Dungeon_Fact extends Fact
@@ -168,9 +171,9 @@ class Dungeon_Fact extends Fact
 		super("dungeons","We have a dungeon. You should visit it some time.");
 	}
 	
-	public void on_learn()
+	public void on_learn(Person learner)
 	{
-		helpers.get_PC().learn_about_location("Dungeon Below Keshie's Castle", 25);
+		learner.learn_about_location("Dungeon Below Keshie's Castle", 25);
 	}
 }
 
@@ -246,22 +249,30 @@ class Hank_likes_wine extends Fact
 		super("wine", "Hank *really* likes wine. You could say he has a hankering for it.");
 	}
 	
-	public void on_learn()
+	@Override
+	public void on_learn(Person learner)
 	{
-		helpers.get_PC().add_action(new give_Hank_wine());
+		if(learner instanceof Player_Character)
+		{
+			((Player_Character) learner).add_action(new give_Hank_wine());
+		}
+		else if(learner instanceof NPC)
+		{
+			((NPC) learner).add_action((NPC_Action) new give_Hank_wine()); 
+		}
 	}
 	
 	
-	class give_Hank_wine extends Action
+	class give_Hank_wine extends Action implements NPC_Action
 	{
 		give_Hank_wine()
 		{
 			description = "give Hank some wine";
 		}
 		
-		public boolean can_be_done()
+		public boolean can_be_done(Person by_whom)
 		{
-			boolean has_wine = helpers.get_PC().has_item("wine");
+			boolean has_wine = by_whom.has_item("wine");
 			if(has_wine)
 			{
 				boolean same_location = helpers.get_PC().getCurrent_location().has_present("Hank");
@@ -287,6 +298,12 @@ class Hank_likes_wine extends Fact
 		}
 		
 		Action myself = this;
+
+		@Override
+		public int how_likely()
+		{
+			return 0;
+		}
 	}
 }
 
@@ -386,7 +403,7 @@ class Doug extends Body_Guard
 		this.alter_liking(who_support, 5);
 		//increase_friendliness(test_who_hate, -10);
 		
-		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
+		add_fact(new Hank_likes_wine());
 		
 		personal_greeting = "Uh do wut "  + who_support.get_name() + " tells muh to do";
 	}
@@ -398,24 +415,24 @@ class Noble_Hank extends Noble
 	{
 		super(L, "Hank");
 		
-		knowledge_base.put("hank_likes_wine", new Hank_likes_wine());
+		add_fact(new Hank_likes_wine());
 		
 		potential_actions.put("drink wine", new drink_wine());
 		
 		personal_greeting = "Do you have any wine?";
 	}
 	
-	class drink_wine extends NPC_Action
+	class drink_wine extends Action implements NPC_Action
 	{
 		drink_wine()
 		{
 			description = "drinks some wine";
-			likelihood = 30;
 		}
 		
-		public boolean can_be_done()
+		
+		public boolean can_be_done(Person by_whom)
 		{
-			return has("wine");
+			return by_whom.has_item("wine");
 		}
 		
 		@Override
@@ -429,6 +446,13 @@ class Noble_Hank extends Noble
 				decrease_item("wine", 1);
 			}
 		}
+
+
+		@Override
+		public int how_likely()
+		{
+			return 30;
+		}
 	}
 }
 
@@ -438,8 +462,8 @@ class Noble_Kesh extends Noble
 	{
 		super(L,"High Lord Kesh of No-Funnington");
 		
-		knowledge_base.put("goblins", new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
-		knowledge_base.put("dungeon", new Dungeon_Fact());
+		add_fact(new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
+		add_fact(new Dungeon_Fact());
 	
 		personal_greeting = "greetings, peasant";
 	}

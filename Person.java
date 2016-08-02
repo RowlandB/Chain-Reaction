@@ -1,6 +1,15 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class Person
 {
+	public Person()
+	{
+		my_knowledge = new Knowledge();
+	}
+	
 	abstract public void add_item(item new_item);
 	
 	abstract public Person get_hate();
@@ -10,44 +19,142 @@ public abstract class Person
 		return name;
 	}
 	
+	abstract public void add_fact(Fact new_fact);
+	
+	public void learn_about_location(String location_name, int how_much)
+	{
+		location_knowledge.learn_about_location(location_name, how_much);
+	}
+	
 	public Location getCurrent_location()
 	{
 		return current_location;
 	}
 	
+	public void does_fight_often(Person winner)
+	{
+		//TODO already have it
+		//if()
+			
+		//TODO
+		int number_of_fights = 0;
+		for(Fact potential_fights : my_knowledge.get_facts())
+		{
+			if(potential_fights.Get_Description().contains("fought"))
+			{
+				
+			}
+		}
+		
+		
+	}
+	
+	public boolean is_Weak()
+	{
+		return (current_hp < (total_hp/2));
+	}
+	
 	abstract public void react_to_oppressing_peasants(Person who);
 	
 	abstract public boolean has_item(item what);
+	abstract public boolean has_item(String what);
 	abstract public void gain(item what, int how_much);	
 	abstract public void injure(int x);
 	abstract protected void die();
-	abstract int get_fight_power();
-	
-	void LoseFight(int how_much)
-	{
-		injure(how_much);
-	}
+	abstract int get_attack_power();
+	abstract int get_defense_power();
 	
 	protected int current_hp;
 	protected Location current_location;
 	protected String name;
 	protected int total_hp;
+	protected mobility_controller location_knowledge;
+	protected Knowledge my_knowledge;
 	
 	
 }
 
+class mobility_controller
+{
+	mobility_controller()
+	{
+		mobility = new HashMap<String, Integer>(0);
+	}
+	
+	public void learn_about_location(String location_name, int how_much)
+	{
+		int initial = 1;
+		if(mobility.containsKey(location_name))
+		{
+			initial = mobility.get(location_name);
+		}
+		
+		mobility.put(location_name, (how_much+initial));
+	}
 
-///////////////////////////////
-abstract class Action
-{	
-	Action(){}
+	public int get_score(String location_name)
+	{
+		if(!mobility.containsKey(location_name))
+		{
+			mobility.put(location_name, 1);
+		}
+		
+		return mobility.get(location_name);
+	}
 	
-	public boolean can_be_done(){return true;}
+	private HashMap<String, Integer> mobility;	
+
+}
+
+class Knowledge
+{
+	Knowledge()
+	{
+		the_Facts = new ArrayList<Fact>();
+	}
 	
-	public String Get_Description(){return description;}
-	abstract public void What_Happens();
-	public String description;
+	public void add_Fact(Fact new_info)
+	{
+		if(!this.contains_id(new_info.Get_id()))
+		{
+			the_Facts.add(new_info);
+		}
+		//TODO: else?
+	}
 	
-	//TODO: add support for long/short actions
-	//private double time_to_completion
+	public void display_all_facts()
+	{
+		if(the_Facts.size()==0)
+		{
+			helpers.output("You know nothing");
+			helpers.finish_output();
+		}
+		else
+		{
+			for(int x=0; x<the_Facts.size(); x++)
+			{
+				helpers.output("=============");
+				the_Facts.get(x).display_fact();
+			}
+		}
+	}
+	
+	public boolean contains_id(int id)
+	{
+		for(int x=0; x<the_Facts.size(); x++)
+		{
+			if(the_Facts.get(x).Get_id()==id)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public Set<Fact> get_facts()
+	{
+		return new HashSet<Fact>(the_Facts);
+	}
+	
+	private ArrayList<Fact> the_Facts;
 }

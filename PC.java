@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 
 ///////////////////////////////
@@ -79,7 +78,7 @@ class Player_Character extends Person
 		
 		for(Action possible_action: what_do.values())
 		{
-			if(possible_action.can_be_done())
+			if(possible_action.can_be_done(this))
 			{
 				potentials.add(possible_action);
 			}
@@ -89,7 +88,7 @@ class Player_Character extends Person
 		
 		for(Action possible_action: other_options.values())
 		{
-			if(possible_action.can_be_done())
+			if(possible_action.can_be_done(this))
 			{
 				potentials.add(possible_action);
 			}
@@ -233,7 +232,7 @@ class Player_Character extends Person
 		
 		public void What_Happens()
 		{
-			my_knowledge.ruminate();
+			my_knowledge.display_all_facts();
 		}
 	}
 	
@@ -307,8 +306,7 @@ class Player_Character extends Person
 	public void add_fact(Fact new_fact)
 	{
 		my_knowledge.add_Fact(new_fact);
-		
-		new_fact.on_learn();
+		new_fact.on_learn(this);
 	}
 	
 	public void steal(item item)
@@ -325,13 +323,7 @@ class Player_Character extends Person
 	{	
 		my_inventory.remove_item(my_inventory.check_item(consume), 1);
 	}
-	
-	public void learn_about_location(String location_name, int how_much)
-	{
-		location_knowledge.learn_about_location(location_name, how_much);
 		
-	}
-	
 	public void add_item(item new_item)
 	{
 		int where = my_inventory.check_item(new_item.get_name());
@@ -391,7 +383,13 @@ class Player_Character extends Person
 		
 	}
 
-	public int get_fight_power()
+	public int get_attack_power()
+	{
+		//TODO
+		return 100;
+	}
+	
+	public int get_defense_power()
 	{
 		//TODO
 		return 100;
@@ -734,54 +732,7 @@ class Player_Character extends Person
 	}
 	
 //////////////////	
-	class Knowledge
-	{
-		Knowledge()
-		{
-			the_Facts = new ArrayList<Fact>();
-		}
-		
-		public void add_Fact(Fact new_info)
-		{
-			if(!this.contains_id(new_info.Get_id()))
-			{
-				the_Facts.add(new_info);
-			}
-			//TODO: else?
-		}
-		
-		public void ruminate()
-		{
-			if(the_Facts.size()==0)
-			{
-				helpers.output("You know nothing, " + name);
-				helpers.finish_output();
-			}
-			else
-			{
-				for(int x=0; x<the_Facts.size(); x++)
-				{
-					helpers.output("=============");
-					the_Facts.get(x).display_fact();
-				}
-			}
-		}
-		
-		private boolean contains_id(int id)
-		{
-			for(int x=0; x<the_Facts.size(); x++)
-			{
-				if(the_Facts.get(x).Get_id()==id)
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-		
-		
-		private ArrayList<Fact> the_Facts;
-	}
+
 
 	@Override
 	public Person get_hate()
@@ -791,110 +742,10 @@ class Player_Character extends Person
 	
 //////////////////////////////////////
 
-	private Knowledge my_knowledge;
 	private Inventory my_inventory;
 	private HashMap<String, Action> what_do;
-	private mobility_controller location_knowledge;
 	private int drunk;
 	private int stealth;
 
 }
 
-///////////////////////////////
-abstract class Fact
-{
-	Fact(String descr, String hf)
-	{
-		basic_description = descr;
-		hard_facts = hf;
-		my_id = unique_id;
-		unique_id++;
-	}
-	
-	public void on_learn()
-	{
-		//nothing
-	}
-
-	public String Get_Description()
-	{
-		return basic_description;
-	}
-	
-	public String Get_Fact()
-	{
-		return hard_facts;
-	}
-	
-	public int Get_id()
-	{
-		return my_id;
-	}
-
-	public void display_fact()
-	{
-		helpers.output(basic_description);
-		helpers.output(hard_facts);
-		//helpers.output(Integer.toString(my_id));
-		helpers.finish_output();
-	}
-	
-	protected String basic_description;
-	protected String hard_facts;
-	protected int my_id;
-	
-	protected static int unique_id = 1;
-}
-
-
-//////////////////////////////
-
-class mobility_controller
-{
-	mobility_controller()
-	{
-		mobility = new ArrayList<mobility_score>();
-	}
-	
-	private class mobility_score
-	{
-		mobility_score(String the_name, int new_score)
-		{
-			name = the_name;
-			score = new_score;
-		}
-		
-		public int score;
-		public String name;
-	}
-	
-	public void learn_about_location(String location_name, int how_much)
-	{
-		for(int x=0; x<mobility.size(); x++)
-		{
-			if(mobility.get(x).name == location_name)
-			{
-				mobility.get(x).score = mobility.get(x).score + how_much;
-				return;
-			}
-		}
-		
-		//we didn't find it
-		mobility.add(new mobility_score(location_name, how_much+1));
-	}
-
-	public int get_score(String location_name)
-	{
-		for(int x=0; x<mobility.size(); x++)
-		{
-			if(mobility.get(x).name == location_name)
-			{
-				return mobility.get(x).score;
-			}
-		}
-		return 1;
-	}
-	
-	private ArrayList<mobility_score> mobility;	
-
-}
