@@ -2,14 +2,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-abstract class Body_Guard extends NPC
+class Body_Guard extends NPC
 {
-	Body_Guard(Location Start, String their_name)
+	Body_Guard(Location Start, String their_name, Person protect_target)
 	{
 		super(Start, their_name);
 		mood = Mood.ambivalent;
 		attack_power = 10;
 		defense_power = 10;
+		
+		my_protect_target = protect_target;
+	}
+	
+	@Override
+	protected String get_personal_greeting()
+	{
+		return ("I do what " + my_protect_target.get_name() + " tells me.");
 	}
 	
 	@Override
@@ -79,9 +87,11 @@ abstract class Body_Guard extends NPC
 			}
 		}
 	}
+	
+	private Person my_protect_target;
 }
 
-abstract class Commoner extends NPC
+class Commoner extends NPC
 {
 	Commoner(Location Start, String their_name)
 	{
@@ -147,6 +157,7 @@ abstract class Commoner extends NPC
 	{
 		go_home()
 		{
+			super(Commoner.this);
 			description = " comes home";
 		}
 		
@@ -183,6 +194,7 @@ abstract class Commoner extends NPC
 	{
 		go_to_work()
 		{
+			super(Commoner.this);
 			description = " comes to work";
 		}
 		
@@ -216,7 +228,7 @@ abstract class Commoner extends NPC
 	}
 }
 
-abstract class Noble extends NPC
+class Noble extends NPC
 {
 	Noble(Location Start, String their_name)
 	{
@@ -250,7 +262,7 @@ abstract class Noble extends NPC
 		}
 		
 		@Override
-		public boolean can_be_done(Person by_whom)
+		public boolean can_be_done()
 		{
 			return by_whom.has_item("gold");
 		}
@@ -327,7 +339,7 @@ abstract class  NPC extends Person
 		recent_damage = 0;
 		
 		NPC_items = new HashMap<String,item>(0);
-		NPC_items.put("gold", new gold());
+		NPC_items.put("gold", new gold(NPC.this, 3));
 		
 		attack_power = 5;
 		
@@ -337,6 +349,26 @@ abstract class  NPC extends Person
 	
 	abstract protected support make_new_support();
 	abstract protected counter make_new_counter();
+	
+	public void set_personal_greeting(String new_greeting)
+	{
+		personal_greeting = new_greeting;
+	}
+	
+	public void set_mood(Mood new_mood)
+	{
+		mood = new_mood;
+	}
+	
+	public void set_home(Location new_home)
+	{
+		home = new_home;
+	}
+	
+	public void set_work(Location new_work)
+	{
+		work = new_work;
+	}
 	
 	//Default Action used by Main
 	public void Act()
@@ -473,6 +505,9 @@ abstract class  NPC extends Person
 //		this.Person_Likability.put(who, (initial + how_much));
 //	}
 	
+	
+	
+	
 	@Override
 	public void injure(int x)
 	{
@@ -549,7 +584,7 @@ abstract class  NPC extends Person
 		}
 		else
 		{
-			item new_thing = new item (what, how_much);
+			item new_thing = new item (what, how_much, NPC.this);
 			NPC_items.put(new_thing.get_name(), new_thing);
 		}
 	}
@@ -614,11 +649,16 @@ abstract class  NPC extends Person
 			helpers.output("[disgruntaled silence].");	
 		}
 		
-		helpers.output(personal_greeting);
+		helpers.output(get_personal_greeting());
 		
 		helpers.finish_output();
 	}
 	
+	protected String get_personal_greeting()
+	{
+		return personal_greeting;
+	}
+
 	private int get_likeability(Person who)
 	{
 		if(Person_Likability.containsKey(who))
@@ -638,11 +678,12 @@ abstract class  NPC extends Person
 		int action_value = -1000;
 		for(NPC_Action this_action : potential_actions.values())
 		{
-			if(this_action.can_be_done(this))
+			if(this_action.can_be_done())
 			{
-				if(this_action.how_likely() + helpers.random(-50, 50) > action_value)
+				int x = this_action.how_likely() + helpers.grandom(-50, 50);
+				if(x > action_value)
 				{
-					action_value = this_action.how_likely();
+					action_value = x;
 					the_one = this_action;
 				}
 			}
@@ -659,7 +700,7 @@ abstract class  NPC extends Person
 	
 	abstract class counter extends Action implements NPC_Action
 	{
-		counter(){}
+		counter(){super(NPC.this);}
 		
 		public void setTarget(Person new_target)
 		{
@@ -699,7 +740,7 @@ abstract class  NPC extends Person
 	
 	abstract class support extends Action implements NPC_Action
 	{
-		support(){}
+		support(){super(NPC.this);}
 		
 		public void setTarget(Person new_target)
 		{
@@ -743,6 +784,7 @@ abstract class  NPC extends Person
 	{
 		does_nothing()
 		{
+			super(NPC.this);
 			description =  "does nothing";
 		}
 		
@@ -761,7 +803,8 @@ abstract class  NPC extends Person
 	class Flee extends Action implements NPC_Action
 	{
 		public Flee()
-		{		
+		{
+			super(NPC.this);
 			description = "runs away";
 		}
 		
@@ -817,10 +860,7 @@ abstract class  NPC extends Person
 	}
 
 	/////////////////////////////
-	protected enum Mood
-	{
-		happy, sad, angry, ambivalent
-	}
+
 	
 	private int recent_damage;
 	protected Location home;
@@ -833,3 +873,4 @@ abstract class  NPC extends Person
 	protected HashMap<String, item> NPC_items;
 	protected HashMap<Person, Integer> Person_Likability;
 }
+

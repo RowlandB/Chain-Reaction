@@ -41,6 +41,11 @@ abstract class Fact
 	protected int my_id;
 	
 	protected static int unique_id = 1;
+
+	public boolean concerns(Person individual)
+	{
+		return false;
+	}
 }
 
 class person_has_fought extends Fact
@@ -55,8 +60,23 @@ class person_has_fought extends Fact
 	@Override
 	public void on_learn(Person Learner)
 	{
-		Learner.does_fight_often(winner);
-		Learner.does_fight_often(loser);
+		//Learner.does_fight_often(winner);
+		//Learner.does_fight_often(loser);
+	}
+	
+	@Override
+	public boolean concerns(Person individual)
+	{
+		if(individual.equals(winner))
+		{
+			return true;
+		}
+		else if(individual.equals(loser))
+		{
+			return true;
+		}
+		
+		return false;
 	}
 	
 	Person winner;

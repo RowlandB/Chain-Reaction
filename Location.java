@@ -9,7 +9,7 @@ abstract class Location
 		options = new HashMap<String, Action>();
 		flammability = 0;
 
-		options.put("Search", new Search());
+		options.put("Search", new Search(helpers.get_PC()));
 		unattended_stuff = new HashMap<String, item>();
 	}
 	
@@ -24,7 +24,7 @@ abstract class Location
 	
 		
 		unattended_stuff = new HashMap<String, item>();
-		options.put("Search", new Search());
+		options.put("Search", new Search(helpers.get_PC()));
 	}
 	
 	public void time_passes()
@@ -34,8 +34,8 @@ abstract class Location
 			if(helpers.random(0, 100) < this.get_flammability())
 			{
 				//building has burnt
-				this.Loc_name = "The Burnt Remains of " + this.Loc_name;
 				helpers.output(this.Where() + " has burnt to the ground");
+				this.Loc_name = "The Burnt Remains of " + this.Loc_name;
 				burning = false;
 			}
 			else
@@ -132,8 +132,9 @@ abstract class Location
 
 	class Search extends Action
 	{
-		Search()
+		Search(Person who_does)
 		{
+			super(who_does);
 			description = "Search the area";
 		}
 		

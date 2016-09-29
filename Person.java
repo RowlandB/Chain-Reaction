@@ -30,24 +30,39 @@ public abstract class Person
 	{
 		return current_location;
 	}
+//	
+//	public void does_fight_often(Person winner)
+//	{
+//		//TODO already have it
+//		//if()
+//			
+//		//TODO
+//		int number_of_fights = 0;
+//		for(Fact potential_fights : my_knowledge.get_facts())
+//		{
+//			if(potential_fights.Get_Description().contains("fought"))
+//			{
+//				if(potential_fights.concerns(winner))
+//				{
+//					number_of_fights++;
+//				}
+//			}
+//		}
+//		
+//		if(number_of_fights >= 5)
+//		{
+//			person_fights_alot blarg =  new person_fights_alot(winner);
+//			
+//		}
+//		
+//	}
 	
-	public void does_fight_often(Person winner)
+	public void decrement_consumable(String item)
 	{
-		//TODO already have it
-		//if()
-			
-		//TODO
-		int number_of_fights = 0;
-		for(Fact potential_fights : my_knowledge.get_facts())
-		{
-			if(potential_fights.Get_Description().contains("fought"))
-			{
-				
-			}
-		}
-		
+		// TODO Auto-generated method stub
 		
 	}
+
 	
 	public boolean is_Weak()
 	{
@@ -69,8 +84,7 @@ public abstract class Person
 	protected String name;
 	protected int total_hp;
 	protected mobility_controller location_knowledge;
-	protected Knowledge my_knowledge;
-	
+	protected Knowledge my_knowledge;	
 	
 }
 
@@ -80,6 +94,8 @@ class mobility_controller
 	{
 		mobility = new HashMap<String, Integer>(0);
 	}
+	
+	//TODO add 'location likability'
 	
 	public void learn_about_location(String location_name, int how_much)
 	{

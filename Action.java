@@ -2,9 +2,9 @@
 
 abstract class Action implements IAction
 {	
-	Action(){}
+	Action(Person who_does){by_whom = who_does;}
 	
-	public boolean can_be_done(Person by_whom){return true;}
+	public boolean can_be_done(){return true;}
 	
 	public String Get_Description(){return description;}
 	
@@ -12,12 +12,13 @@ abstract class Action implements IAction
 	
 	//TODO: add support for long/short actions
 	//private double time_to_completion
+	protected Person by_whom;
 }
 
 
 interface IAction
 {
-	public boolean can_be_done(Person by_whom);
+	public boolean can_be_done();
 	abstract public void What_Happens();
 	public String Get_Description();
 }

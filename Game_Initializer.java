@@ -141,7 +141,16 @@ class helpers
 	static int random(int min, int max)
 	{
 		Random random = new Random();
-		return random.nextInt(max-min+1)+min;
+		int x = random.nextInt(max-min+1)+min;
+		return x;
+	}
+	
+	//inclusive
+	public static int grandom(int min, int max)
+	{
+		Random random = new Random();
+		int x = (int) (random.nextGaussian()*((max-min)/4)+(min+max)/2);
+		return x;
 	}
 	
 	//static HashMap<Location> Get_Locations()
@@ -179,6 +188,7 @@ class helpers
 		static IO_Object IO;
 		static HashMap<String, Location> Location_List;
 		static HashMap<String, NPC> NPC_List;
+		
 		
 }
 	

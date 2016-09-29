@@ -10,14 +10,14 @@ class Player_Character extends Person
 		this.my_inventory = new Inventory();
 
 //note: the commented-out items are POC items. They can be ignored
-		my_inventory.add_new_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter"));
+		my_inventory.add_new_item(new readable_item("mysterious note", "The stones are growing restless. Beware the Great God Jamie Ter", Player_Character.this));
 //		my_inventory.add_new_item(new item());
 //		my_inventory.add_new_item(new health_potion());
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.one_handed));
 //		my_inventory.add_new_item(new lazy_equip(equip_region.two_handed));
-		my_inventory.add_new_item(new torch());
-		wine starting_wine = new wine();
+		my_inventory.add_new_item(new torch(Player_Character.this));
+		wine starting_wine = new wine(Player_Character.this);
 		starting_wine.set_count(10);
 		add_item(starting_wine);
 		
@@ -78,7 +78,7 @@ class Player_Character extends Person
 		
 		for(Action possible_action: what_do.values())
 		{
-			if(possible_action.can_be_done(this))
+			if(possible_action.can_be_done())
 			{
 				potentials.add(possible_action);
 			}
@@ -88,7 +88,7 @@ class Player_Character extends Person
 		
 		for(Action possible_action: other_options.values())
 		{
-			if(possible_action.can_be_done(this))
+			if(possible_action.can_be_done())
 			{
 				potentials.add(possible_action);
 			}
@@ -101,6 +101,7 @@ class Player_Character extends Person
 	{
 		Move()
 		{
+			super(Player_Character.this);
 			description = "Go someplace else";
 		}
 		
@@ -133,6 +134,7 @@ class Player_Character extends Person
 	{
 		Chat()
 		{
+			super(Player_Character.this);
 			description = "Talk to someone near you";
 		}
 		
@@ -165,6 +167,7 @@ class Player_Character extends Person
 	{
 		DoNothing()
 		{
+			super(Player_Character.this);
 			description = "Wait for things to happen";
 		}
 		
@@ -176,6 +179,7 @@ class Player_Character extends Person
 	{
 		ExamineInventory()
 		{
+			super(Player_Character.this);
 			description = "Check out your items";
 		}
 		
@@ -227,6 +231,7 @@ class Player_Character extends Person
 	{
 		Ruminate()
 		{
+			super(Player_Character.this);
 			description = "View previously discovered facts";
 		}
 		
@@ -240,6 +245,7 @@ class Player_Character extends Person
 	{
 		Equip_Items()
 		{
+			super(Player_Character.this);
 			description = "Equip Items";
 		}
 		
@@ -358,7 +364,7 @@ class Player_Character extends Person
 		}
 		else
 		{
-			my_inventory.add_new_item(new item(new_item, how_many));
+			my_inventory.add_new_item(new item(new_item, how_many, Player_Character.this));
 		}
 	}
 	

@@ -3,12 +3,21 @@
 
 abstract class consumable_item extends item
 {
+	public consumable_item(Person owner)
+	{
+		super(owner);
+	}
 	
 	abstract class consume extends Action
 	{
+		consume(Person who_does)
+		{
+			super(who_does);
+		}
+		
 		final public void What_Happens()
 		{
-			helpers.get_PC().decrement_consumable(the_item);
+			by_whom.decrement_consumable(the_item.get_name());
 			Other_Happenings();
 		}
 		
@@ -23,6 +32,7 @@ abstract class equippable_item extends item
 {
 	equippable_item(equip_region where)
 	{
+		super(helpers.get_PC());
 		equipped = false;
 		slot = where;
 	}
@@ -52,17 +62,19 @@ abstract class equippable_item extends item
 
 class gold extends item
 {
-	gold()
+	gold(Person owner, int how_much)
 	{
+		super(owner);
+		
 		name = "gold";
 		rules_description = "Money";
 		flavor_text = "shiny coins that glitter in the light";
 		weight = 1;
 		value = 5;
 		stolen = false;
-		ability = new Nothing();
+		ability = new Nothing(owner);
 		slot=equip_region.not_equippable;
-		quantity = 1;
+		quantity = how_much;
 		flammable = true;
 	}
 }
@@ -70,7 +82,7 @@ class gold extends item
 //don't make this abstract. You can have random 'stuff' items
 class item
 {
-	public item(item from_where, int how_many)
+	public item(item from_where, int how_many, Person new_owner)
 	{
 		name = from_where.name;
 		rules_description = from_where.rules_description;
@@ -83,16 +95,16 @@ class item
 		quantity = how_many;
 	}
 	
-	item()
+	item(Person new_owner)
 	{
-		
+		owner = new_owner;
 		name = "a 'thing'";
 		rules_description = "no, really, this is just the default item description, it does nothing";
 		flavor_text = "a boring 'thing' with no discernable use";
 		weight = 0;
 		value = 0.0000001;
 		stolen = false;
-		ability = new Nothing();
+		ability = new Nothing(owner);
 		slot=equip_region.not_equippable;
 		quantity = 1;
 		flammable = true;
@@ -169,8 +181,9 @@ class item
 	
 	class Nothing extends Action
 	{
-		Nothing()
+		Nothing(Person who_does)
 		{
+			super(who_does);
 			description = "nothing will happen";
 		}
 		
@@ -191,7 +204,7 @@ class item
 	protected equip_region slot;
 	protected int quantity;
 	protected boolean flammable;
-	
+	protected Person owner;
 }
 
 //only here for testing
@@ -207,14 +220,16 @@ class lazy_equip extends equippable_item
 
 class readable_item extends item
 {
-	readable_item(String base_name, String base_text)
+	readable_item(String base_name, String base_text, Person owner)
 	{
+		super(owner);
+		
 		name = base_name;
 		weight = 0;
 		value = 0;
 		stolen = false;
 		read = false;
-		ability = new Read();
+		ability = new Read(owner);
 		text = base_text;
 	}
 	
@@ -232,8 +247,9 @@ class readable_item extends item
 	
 	class Read extends Action
 	{
-		Read()
+		Read(Person who_does)
 		{
+			super(who_does);
 			description = "Display the writing";
 		}
 		
