@@ -17,7 +17,7 @@ abstract class consumable_item extends item
 		
 		final public void What_Happens()
 		{
-			by_whom.decrement_consumable(the_item.get_name());
+			by_whom.decrease_item(the_item.get_name());
 			Other_Happenings();
 		}
 		
@@ -37,6 +37,10 @@ abstract class equippable_item extends item
 		slot = where;
 	}
 	
+	@Override
+	abstract public item copy_item(int how_many, Person new_owner);
+	
+	
 	public void Display()
 	{
 		super.Display();
@@ -44,14 +48,14 @@ abstract class equippable_item extends item
 		helpers.finish_output();
 	}
 	
-	public void on_equip()
+	public void on_equip(Person who)
 	{
 		System.err.println("equipped " + this.name + " item");
 		equipped = true;
 		
 	}
 	
-	public void on_unequip()
+	public void on_unequip(Person who)
 	{
 		System.err.println("unequipped " + this.name + " item");
 		equipped = false;
@@ -82,17 +86,33 @@ class gold extends item
 //don't make this abstract. You can have random 'stuff' items
 class item
 {
-	public item(item from_where, int how_many, Person new_owner)
+	public item copy_item(int how_many, Person new_owner)
 	{
-		name = from_where.name;
-		rules_description = from_where.rules_description;
-		flavor_text = from_where.flavor_text;
-		weight = from_where.weight;
-		value = from_where.value;
-		stolen = from_where.stolen;
-		ability = from_where.ability;
-		slot = from_where.slot;
-		quantity = how_many;
+		item new_item = new item(new_owner);
+		new_item.name = this.name;
+		new_item.rules_description = this.rules_description;
+		new_item.flavor_text = this.flavor_text;
+		new_item.weight = this.weight;
+		new_item.value = this.value;
+		new_item.stolen = this.stolen;
+		new_item.ability = this.ability;
+		new_item.slot = this.slot;
+		new_item.quantity = how_many;
+		
+		return new_item;
+	}
+	
+	protected void cheaty_copy_item(item new_item, int how_many, Person new_owner)
+	{
+		new_item.name = this.name;
+		new_item.rules_description = this.rules_description;
+		new_item.flavor_text = this.flavor_text;
+		new_item.weight = this.weight;
+		new_item.value = this.value;
+		new_item.stolen = this.stolen;
+		new_item.ability = this.ability;
+		new_item.slot = this.slot;
+		new_item.quantity = how_many;
 	}
 	
 	item(Person new_owner)
@@ -213,6 +233,15 @@ class lazy_equip extends equippable_item
 	lazy_equip(equip_region where)
 	{
 		super(where);
+	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item arg = new lazy_equip(this.slot);
+		super.cheaty_copy_item(arg, how_many, new_owner);
+		
+		return arg;
 	}
 }
 

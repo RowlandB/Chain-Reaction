@@ -149,21 +149,11 @@ class Fields extends Location
 		if(time_till_done==0)
 		{
 			time_till_done = time_it_takes;
-			harvest();
+			add_item(thing_that_grows);
 		}
 	}
 	
-	void harvest()
-	{
-		if(unattended_stuff.containsKey(thing_that_grows.get_name()))
-		{
-			unattended_stuff.get(thing_that_grows.get_name()).increase_quantity(1);
-		}
-		else
-		{
-			unattended_stuff.put(thing_that_grows.get_name(), thing_that_grows);
-		}
-	}
+	
 	
 	protected int time_till_done;
 	protected int time_it_takes;
@@ -227,7 +217,7 @@ class Hank_likes_wine extends Fact
 		public void What_Happens()
 		{
 			//player loses wine
-			by_whom.decrement_consumable("wine");
+			by_whom.decrease_item("wine");
 			
 			NPC Hank = helpers.Get_Person_by_name("Hank");
 			Hank.alter_liking(helpers.get_PC(), 30);
@@ -298,6 +288,7 @@ class My_Game_Initializer extends Game_Initializer
 			Location Bobs_Fields = new Bobs_Field("Bob's Field");
 			Location Keshies_Castle = new Castle("Keshie's Castle");
 			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
+				Dungeon.add_item(new Destromath_the_Desolator());
 			Location Bobs_Hovel = new Hovel("Bob's Hovel");
 			Location Tavern = new Tavern("The Tavern");
 			Location The_Oakenshields = new Hovel("The Oakenshields'");
@@ -397,7 +388,7 @@ class Noble_Hank extends Noble
 			//decrement wine
 			if(helpers.random(1, 3)==1)
 			{
-				by_whom.decrement_consumable("wine");
+				by_whom.decrease_item("wine");
 			}
 		}
 
@@ -547,6 +538,42 @@ class steal_wine extends Action implements NPC_Action
 	public int how_likely()
 	{
 		return 10;
+	}
+}
+
+class Destromath_the_Desolator extends equippable_item
+{
+	Destromath_the_Desolator()
+	{
+		super(equip_region.two_handed);
+		name = "Destromath the Desolator";
+		flavor_text = "An Icy Blade that steals the souls of those it kills";
+	}
+	
+	@Override
+	public void on_equip(Person who)
+	{
+		super.on_equip(who);
+		who.injure(10);
+		who.increase_attack_power(1000);
+		who.increase_defense_power(-1000);
+	}
+	
+	@Override
+	public void on_unequip(Person who)
+	{
+		super.on_unequip(who);
+		who.increase_attack_power(-1000);
+		who.increase_defense_power(1000);
+	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item  = new Destromath_the_Desolator();
+		super.cheaty_copy_item(new_item, how_many, new_owner);
+		
+		return new_item;
 	}
 	
 }

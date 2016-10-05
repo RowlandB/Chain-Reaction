@@ -104,6 +104,18 @@ abstract class Location
 		return Loc_name;
 	}
 	
+	public void add_item(item new_stuff)
+	{
+		if(unattended_stuff.containsKey(new_stuff.get_name()))
+		{
+			unattended_stuff.get(new_stuff.get_name()).increase_quantity(1);
+		}
+		else
+		{
+			unattended_stuff.put(new_stuff.get_name(), new_stuff);
+		}
+	}
+	
 	public void set_name(String new_name)
 	{
 		Loc_name = new_name;
@@ -154,7 +166,6 @@ abstract class Location
 				{
 					if(stuff.get_stolen())
 					{
-						//TODO: add stealth
 						helpers.output_partial_list(x, stuff.get_name() + " (" + Integer.toString(stuff.get_count()) + ")", true);
 					}
 					else
@@ -184,7 +195,7 @@ abstract class Location
 					
 					if(!unattended_stuff.get(name).get_stolen() || stealthy)
 					{
-						helpers.get_PC().gain(unattended_stuff.get(name), how_many);
+						helpers.get_PC().add_item(unattended_stuff.get(name), how_many);
 						
 						if(unattended_stuff.get(name).get_count() > how_many)
 						{

@@ -149,8 +149,15 @@ class Commoner extends NPC
 		{
 			// TODO Auto-generated method stub
 			
+			Location where = this.by_whom.getCurrent_location();
+			for(Person who : where.GetEveryone().values())
+			{
+				if(who.likes(this.by_whom,5))
+				{
+					who.alter_liking(target, 1);
+				}
+			}
 		}
-		
 	}
 
 	class go_home extends Action implements NPC_Action
@@ -271,8 +278,7 @@ class Noble extends NPC
 		public void What_Happens()
 		{
 			//give the dude some money
-			item my_gold = NPC_items.get("gold");
-			Give(target, my_gold, 20);
+			Give(target, "gold", 20);
 		}
 	}
 	
@@ -338,8 +344,7 @@ abstract class  NPC extends Person
 		location_knowledge = new mobility_controller();
 		recent_damage = 0;
 		
-		NPC_items = new HashMap<String,item>(0);
-		NPC_items.put("gold", new gold(NPC.this, 3));
+		character_inventory.add_item(new gold(NPC.this, 3));
 		
 		attack_power = 5;
 		
@@ -370,6 +375,19 @@ abstract class  NPC extends Person
 		work = new_work;
 	}
 	
+	@Override
+	public boolean likes(Person liked_person, int how_much)
+	{
+		int initial_liking = 0;
+		if(this.Person_Likability.containsKey(liked_person))
+		{
+			initial_liking = this.Person_Likability.get(liked_person);
+		}
+		
+		int random  = helpers.grandom(-5, 5);
+		return (initial_liking + random >= how_much);
+	}	
+	
 	//Default Action used by Main
 	public void Act()
 	{
@@ -386,13 +404,8 @@ abstract class  NPC extends Person
 		{
 			helpers.output(name + " " + the_action.Get_Description());
 		}
-		
 	}
 	
-	public void add_item(item new_item)
-	{
-		NPC_items.put(new_item.get_name(), new_item);
-	}
 	public void Chat_with_PC()
 	{
 		Chat_Greeting();
@@ -439,20 +452,6 @@ abstract class  NPC extends Person
 	public void add_action(NPC_Action A)
 	{
 		potential_actions.put(A.Get_Description(), A);
-	}
-	
-	public void decrease_item(String item_name, int how_many)
-	{
-		item the_item = NPC_items.get(item_name);
-		int new_count = the_item.get_count() - how_many;
-		if(new_count <= 0)
-		{
-			NPC_items.remove(item_name);
-		}
-		else
-		{
-			the_item.set_count(new_count);
-		}
 	}
 	
 	public void Fight(Person opponent)
@@ -567,39 +566,6 @@ abstract class  NPC extends Person
 		return dude;
 	}
 	
-	protected void Give(Person target, item what, int how_much)
-	{
-		int really_how_much = Math.min(how_much, what.get_count());
-		decrease_item(what.get_name(), really_how_much);
-		
-		target.gain(what, how_much);		
-	}
-	
-	public void gain(item what, int how_much)
-	{
-		if(this.has_item(what))
-		{
-			item my_item = NPC_items.get(what.get_name());
-			my_item.set_count(my_item.get_count() + how_much);
-		}
-		else
-		{
-			item new_thing = new item (what, how_much, NPC.this);
-			NPC_items.put(new_thing.get_name(), new_thing);
-		}
-	}
-	
-	public boolean has_item(String item_name)
-	{
-		return NPC_items.containsKey(item_name);
-	}
-	
-	@Override
-	public boolean has_item(item what)
-	{
-		return has_item(what.get_name());
-	}
-	
 	protected void Search_For(Class<? extends NPC> NPC_type)
 	{
 		//TODO this will search for a *type* of person, as opposed to a specific person
@@ -695,6 +661,7 @@ abstract class  NPC extends Person
 	protected void die()
 	{
 		// TODO Auto-generated method stub
+		System.err.println(this.get_name() + " has died in " + this.getCurrent_location());
 		
 	}
 	
@@ -846,7 +813,7 @@ abstract class  NPC extends Person
 	}
 	
 	
-	
+	@Override
 	final public void alter_liking(Person target, int how_much)
 	{
 		int initial_liking = 0;
@@ -866,11 +833,9 @@ abstract class  NPC extends Person
 	protected Location home;
 	protected String personal_greeting;
 	protected Mood mood;
-	protected int attack_power;
-	protected int defense_power;
 	protected Location work;
 	protected HashMap<String, NPC_Action> potential_actions;
-	protected HashMap<String, item> NPC_items;
+	//protected HashMap<String, item> NPC_items;
 	protected HashMap<Person, Integer> Person_Likability;
 }
 
