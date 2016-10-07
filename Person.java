@@ -145,6 +145,9 @@ public abstract class Person
 	protected int total_hp;
 	protected mobility_controller location_knowledge;
 	protected Knowledge my_knowledge;
+	
+	protected int ticks_until_next_action;
+	
 	//////////////////////////////////////
 	
 	protected Inventory character_inventory;
@@ -480,6 +483,15 @@ public abstract class Person
 			public int iventory_location;
 		}
 		
+		
+		public item get_random_item()
+		{
+			// TODO Auto-generated method stub
+			int which = helpers.random(0, the_items.size());
+			return the_items.get(which);
+		}
+		
+		
 		//store the location of the item in the inventory arraylist
 		//store '-1' if nothing is equipped
 		private item_location head;
@@ -493,6 +505,7 @@ public abstract class Person
 		
 		private int total_weight;
 		private ArrayList<item> the_items;
+		
 	}
 	
 	
@@ -504,6 +517,11 @@ public abstract class Person
 	public void increase_defense_power(int how_much)
 	{
 		defense_power = defense_power + how_much;
+	}
+
+	public int get_work_liklihood()
+	{
+		return 0;
 	}
 	
 }

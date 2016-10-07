@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
 class Body_Guard extends NPC
 {
 	Body_Guard(Location Start, String their_name, Person protect_target)
@@ -12,6 +11,12 @@ class Body_Guard extends NPC
 		defense_power = 10;
 		
 		my_protect_target = protect_target;
+	}
+	
+	@Override
+	public int get_work_liklihood()
+	{
+		return 5;
 	}
 	
 	@Override
@@ -44,6 +49,7 @@ class Body_Guard extends NPC
 		Attack()
 		{
 			description = "attacks";
+			time_to_completion = 25;
 		}
 		
 		@Override
@@ -62,6 +68,14 @@ class Body_Guard extends NPC
 				Search_For(target);
 				alter_liking(target, -2);
 			}
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Attack();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 	
@@ -86,6 +100,14 @@ class Body_Guard extends NPC
 				alter_liking(target, -1);
 			}
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new direct_hate();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	private Person my_protect_target;
@@ -100,6 +122,13 @@ class Commoner extends NPC
 		
 		potential_actions.put("go home", new go_home());
 		potential_actions.put("go to work", new go_to_work());
+		
+	}
+	
+	@Override
+	public int get_work_liklihood()
+	{
+		return 10;
 	}
 	
 	@Override
@@ -118,23 +147,66 @@ class Commoner extends NPC
 	protected support make_new_support()
 	{
 		// TODO Auto-generated method stub
-		return (new awoooga());
+		return (new gives_valuables());
 	}
 	
-	class awoooga extends support
+	class gives_valuables extends support
 	{
-		awoooga()
+		gives_valuables()
 		{
-			description = "makes train noises with";
+			description = "gives valuables to ";
 		}
 		
 		@Override
 		public void What_Happens()
 		{
 			// TODO Auto-generated method stub
-			
+			item gift = get_best_item();
+			Give(target, gift.get_name(), gift.get_count());
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new gives_valuables();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 		
+		@Override
+		public int how_likely()
+		{
+			if(character_inventory.isEmpty())
+			{
+				return -1000;
+			}
+			
+			int helpingmost = -1000;
+			for(Person people : Person_Likability.keySet())
+			{
+				int x = Person_Likability.get(people)-20;
+					
+				if(!getCurrent_location().equals(people.getCurrent_location()))
+				{
+					x = x-20;
+				}
+					
+				if(x > helpingmost)
+				{
+					helpingmost = x;
+						
+					setTarget(people);
+				}
+			}
+			return helpingmost;
+		}
+		
+		protected item get_best_item()
+		{
+			item random_item = character_inventory.get_random_item();
+			int how_many = helpers.random(0,random_item.get_count());
+			return random_item.copy_item(how_many, Commoner.this);
+		}
 	}
 	
 	class Kvetch extends counter
@@ -142,13 +214,12 @@ class Commoner extends NPC
 		public Kvetch()
 		{
 			description = "Kvetches about";
+			time_to_completion = 10;
 		}
 		
 		@Override
 		public void What_Happens()
 		{
-			// TODO Auto-generated method stub
-			
 			Location where = this.by_whom.getCurrent_location();
 			for(Person who : where.GetEveryone().values())
 			{
@@ -157,6 +228,14 @@ class Commoner extends NPC
 					who.alter_liking(target, 1);
 				}
 			}
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Kvetch();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 
@@ -170,12 +249,13 @@ class Commoner extends NPC
 		
 		public void What_Happens()
 		{
-			if(helpers.get_PC().getCurrent_location().equals(current_location))
+			if(helpers.get_PC().getCurrent_location().equals(getCurrent_location()))
 			{
 				helpers.output(name + " goes home");				
 			}
 			
 			MoveTo(Get_Home());
+			time_to_completion = home.distance(getCurrent_location());
 		}
 		
 		public int how_likely()
@@ -195,6 +275,14 @@ class Commoner extends NPC
 				return 30;
 			}
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new go_home();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	class go_to_work extends Action implements NPC_Action
@@ -213,6 +301,7 @@ class Commoner extends NPC
 			}
 			
 			MoveTo(work);
+			time_to_completion = work.distance(getCurrent_location());
 		}
 		
 		public int how_likely()
@@ -231,6 +320,14 @@ class Commoner extends NPC
 			{
 				return 30;
 			}
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new go_to_work();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 }
@@ -280,6 +377,14 @@ class Noble extends NPC
 			//give the dude some money
 			Give(target, "gold", 20);
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new give_gold();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	class call_guards extends counter
@@ -299,11 +404,22 @@ class Noble extends NPC
 			{
 				//tell him to off that guy
 				Guard.alter_liking(target, -10);
+				time_to_completion = 10;
 			}
 			else
 			{
+				Location old_location = getCurrent_location();
 				Search_For(Body_Guard.class);
+				time_to_completion = old_location.distance(getCurrent_location());
 			}
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new call_guards();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 
@@ -391,18 +507,22 @@ abstract class  NPC extends Person
 	//Default Action used by Main
 	public void Act()
 	{
-		//'decide' on an action
-			//for now, always do nothing
-		NPC_Action the_action = find_best_action();
-
-		//do the action
-		the_action.What_Happens();
-		
-		//check if the player is in the same location
-			//notify player
-		if(helpers.get_PC().getCurrent_location().Where() == this.current_location.Where())
+		if(ticks_until_next_action <= 0)
 		{
-			helpers.output(name + " " + the_action.Get_Description());
+			//'decide' on an action
+				//for now, always do nothing
+			NPC_Action the_action = find_best_action();
+	
+			//do the action
+			the_action.What_Happens();
+			ticks_until_next_action = the_action.get_time_to_completion();
+			
+			//check if the player is in the same location
+				//notify player
+			if(helpers.get_PC().getCurrent_location().Where() == this.current_location.Where())
+			{
+				helpers.output(name + " " + the_action.Get_Description());
+			}
 		}
 	}
 	
@@ -451,7 +571,10 @@ abstract class  NPC extends Person
 	
 	public void add_action(NPC_Action A)
 	{
-		potential_actions.put(A.Get_Description(), A);
+		//TODO add a copy action function so that we can copy the action, then place it
+		//otherwise, when one NPC does something, the world might be modified as if someone else did it
+		NPC_Action arg = (NPC_Action) A.copy_Action(NPC.this);
+		potential_actions.put(arg.Get_Description(), arg);
 	}
 	
 	public void Fight(Person opponent)
@@ -532,6 +655,7 @@ abstract class  NPC extends Person
 	public void time_passes()
 	{
 		recent_damage--;
+		ticks_until_next_action--;
 	}
 	
 	Location Get_Home()
@@ -765,6 +889,14 @@ abstract class  NPC extends Person
 		{
 			return 1;
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new does_nothing();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	class Flee extends Action implements NPC_Action
@@ -791,6 +923,7 @@ abstract class  NPC extends Person
 				helpers.output(name + " runs away");				
 			}
 			MoveTo(new_location);
+			time_to_completion = new_location.distance(getCurrent_location());
 		}
 		
 		@Override
@@ -801,6 +934,14 @@ abstract class  NPC extends Person
 				return (recent_damage - 60);
 			}
 			return (recent_damage - 55);
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Flee();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 		
 	}

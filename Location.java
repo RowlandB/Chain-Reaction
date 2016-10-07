@@ -11,9 +11,11 @@ abstract class Location
 
 		options.put("Search", new Search(helpers.get_PC()));
 		unattended_stuff = new HashMap<String, item>();
+		x_coordinate = 0;
+		y_coordinate = 0;
 	}
 	
-	public Location(String name)
+	public Location(String name, int x, int y)
 	{
 		
 		who_is_here = new HashMap<String, NPC>();
@@ -25,6 +27,9 @@ abstract class Location
 		
 		unattended_stuff = new HashMap<String, item>();
 		options.put("Search", new Search(helpers.get_PC()));
+		
+		x_coordinate = x;
+		y_coordinate = y;
 	}
 	
 	public void time_passes()
@@ -140,14 +145,29 @@ abstract class Location
 		
 		return true;
 	}
-	
 
+	abstract class Work extends Action implements NPC_Action
+	{
+		public Work(Person who_does)
+		{
+			super(who_does);
+		}
+
+		@Override
+		final public int how_likely()
+		{
+			return by_whom.get_work_liklihood();
+		}
+	}
+
+	//TODO Split this into NPC/PC stuff
 	class Search extends Action
 	{
 		Search(Person who_does)
 		{
 			super(who_does);
 			description = "Search the area";
+			time_to_completion = 25;
 		}
 		
 		@Override
@@ -195,7 +215,7 @@ abstract class Location
 					
 					if(!unattended_stuff.get(name).get_stolen() || stealthy)
 					{
-						helpers.get_PC().add_item(unattended_stuff.get(name), how_many);
+						helpers.get_PC().add_item(unattended_stuff.get(name), Math.max(how_many,unattended_stuff.get(name).get_count()));
 						
 						if(unattended_stuff.get(name).get_count() > how_many)
 						{
@@ -213,9 +233,24 @@ abstract class Location
 				}
 			}
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_search = new Search(to_whom);
+			new_search.cheaty_copy_action(this, to_whom);
+			return new_search;
+		}
 	}
 	
-	
+	public int distance(Location here)
+	{
+		int x_dif = here.x_coordinate - this.x_coordinate;
+		int y_dif = here.y_coordinate - this.y_coordinate;
+		
+		int distance = (int) Math.sqrt(x_dif*x_dif + y_dif*y_dif);
+		return distance;
+	}
 	
 	private String Loc_name;
 	protected HashMap<String, Action> options;
@@ -224,6 +259,9 @@ abstract class Location
 	protected HashMap<String, item> unattended_stuff;
 	protected int flammability; //percent chance to be done burning
 	protected boolean burning;
-
+	
+	protected int x_coordinate;
+	protected int y_coordinate;
+	
 }
 

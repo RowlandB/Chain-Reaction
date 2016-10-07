@@ -174,12 +174,13 @@ class helpers
 		return x - 1;
 	}
 	
+	//24 hour clock in 5 minute increments
 	private static void increment_time()
 	{
-		time_of_day++;
-		if(time_of_day>23)
+		time_of_day = time_of_day + 5;
+		if(time_of_day>=120)
 		{
-			time_of_day=time_of_day-24;
+			time_of_day=time_of_day-120;
 		}
 	}
 		
@@ -191,4 +192,14 @@ class helpers
 		
 		
 }
+
+class Start_Location extends Location
+{
+	public Start_Location()
+	{
+		x_coordinate = 0;
+		y_coordinate = 0;
+	}
+}
+
 	

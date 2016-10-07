@@ -14,9 +14,9 @@ public class Main
 ///////////////////////////////
 class Bobs_Field extends Fields
 {
-	Bobs_Field(String name)
+	Bobs_Field(String name, int x, int y)
 	{
-		super(name, new corn(null), 5); //TODO extend this to a more realistic number
+		super(name, new corn(null), 50, x, y); //TODO extend this to a more realistic number
 		flammability = 90;
 	}
 }
@@ -24,9 +24,9 @@ class Bobs_Field extends Fields
 ///////////////////////////////
 class Castle extends Location
 {
-	Castle(String name)
+	Castle(String name, int x, int y)
 	{
-		super(name);
+		super(name, x, y);
 		Action laugh_at_plebs = new oppress_peasants(null);
 		options.put("laugh_at_plebs", laugh_at_plebs);
 	}
@@ -37,6 +37,7 @@ class Castle extends Location
 		{
 			super(who_does);
 			description = "Oppress some peasants";
+			time_to_completion = 25;
 		}
 	
 		public boolean can_be_done(Person by_whom)
@@ -55,6 +56,14 @@ class Castle extends Location
 				//guy.know_about_oppressing_peasants(helpers.get_PC());
 				guy.react_to_oppressing_peasants(helpers.get_PC());
 			}
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new oppress_peasants(to_whom);
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 }
@@ -87,15 +96,31 @@ class corn extends consumable_item
 			helpers.output("Yum! That was delicious!");
 			helpers.finish_output();
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new eat_tasty_corn();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
+	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item = new corn(new_owner);
+		this.cheaty_copy_item(new_item, how_many, new_owner);
+		return new_item;
 	}
 }
 
 ///////////////////////////////
 class Dungeon extends Location
 {
-	Dungeon(String name)
+	Dungeon(String name, int x, int y)
 	{
-		super(name);
+		super(name, x, y);
 		accessibility = 20;		
 		
 		unattended_stuff.put("torch", new torch(null));
@@ -118,12 +143,14 @@ class Dungeon_Fact extends Fact
 
 class Fields extends Location
 {
-	Fields(String name, item grow_thing, int how_quickly)
+	Fields(String name, item grow_thing, int how_quickly, int x, int y)
 	{
-		super(name);
+		super(name, x, y);
 		thing_that_grows = grow_thing;
 		time_it_takes = how_quickly;
 		time_till_done = how_quickly;
+		
+		options.put("Grow", new Grow_Things(null));
 	}
 	
 	@Override
@@ -143,12 +170,35 @@ class Fields extends Location
 		}	
 	}
 	
+	class Grow_Things extends Work
+	{
+		public Grow_Things(Person who_does)
+		{
+			super(who_does);
+			description = "grow " + thing_that_grows.get_name();
+		}
+
+		@Override
+		public void What_Happens()
+		{
+			time_till_done = time_till_done - (by_whom.get_work_liklihood() + 5);
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Grow_Things(to_whom);
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
+	}
+	
 	void grow()
 	{
 		time_till_done--;
-		if(time_till_done==0)
+		if(time_till_done<=0)
 		{
-			time_till_done = time_it_takes;
+			time_till_done = time_till_done + time_it_takes;
 			add_item(thing_that_grows);
 		}
 	}
@@ -163,9 +213,9 @@ class Fields extends Location
 ///////////////////////////////
 class Forge extends Location
 {
-	Forge(String name)
+	Forge(String name, int x, int y)
 	{
-		super(name);
+		super(name, x, y);
 		flammability = 20;
 	} 
 
@@ -233,6 +283,15 @@ class Hank_likes_wine extends Fact
 		{
 			return 0;
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new give_Hank_wine(to_whom);
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+
+		}
 	}
 }
 
@@ -264,6 +323,22 @@ class health_potion extends consumable_item
 			helpers.output("You feel your wounds re-knit and close");
 			helpers.finish_output();
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Gain_HP_hp_pot();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
+	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item = new health_potion(new_owner);
+		this.cheaty_copy_item(new_item, how_many, new_owner);
+		return new_item;
 	}
 
 }
@@ -271,9 +346,9 @@ class health_potion extends consumable_item
 ///////////////////////////////
 class Hovel extends Location
 {
-	Hovel(String name)
+	Hovel(String name, int x, int y)
 	{
-		super(name);
+		super(name, x, y);
 		flammability = 75;
 	}
 }
@@ -284,14 +359,14 @@ class My_Game_Initializer extends Game_Initializer
 	public void Initialize(HashMap<String, Location> places, HashMap<String, NPC> NPCs)
 	{
 			/////Locations
-			Location Blacksmith = new Forge("Blacksmith's");
-			Location Bobs_Fields = new Bobs_Field("Bob's Field");
-			Location Keshies_Castle = new Castle("Keshie's Castle");
-			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle");
+			Location Blacksmith = new Forge("Blacksmith's", 20, 20);
+			Location Bobs_Fields = new Bobs_Field("Bob's Field", 40, 40);
+			Location Keshies_Castle = new Castle("Keshie's Castle", 8, 8);
+			Location Dungeon = new Dungeon("Dungeon Below Keshie's Castle", 8, 8);
 				Dungeon.add_item(new Destromath_the_Desolator());
-			Location Bobs_Hovel = new Hovel("Bob's Hovel");
-			Location Tavern = new Tavern("The Tavern");
-			Location The_Oakenshields = new Hovel("The Oakenshields'");
+			Location Bobs_Hovel = new Hovel("Bob's Hovel", 40, 36);
+			Location Tavern = new Tavern("The Tavern", 32, 32);
+			Location The_Oakenshields = new Hovel("The Oakenshields'", 36, 36);
 			places.put("Blacksmith's", Blacksmith);
 			places.put("Bob's Field", Bobs_Fields);
 			places.put("Keshie's Castle", Keshies_Castle);
@@ -398,22 +473,24 @@ class Noble_Hank extends Noble
 		{
 			return 30;
 		}
+
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new drink_wine(to_whom);
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
-}
-
-
-///////////////////////////////
-class Start_Location extends Location
-{
-
 }
 
 ///////////////////////////////
 class Tavern extends Location
 {
-	Tavern(String name)
+	Tavern(String name, int x, int y)
 	{
-		super(name);
+		super(name, x, y);
 		
 		wine unattended_wine = new wine(null);
 		unattended_wine.set_stolen(true);
@@ -431,6 +508,16 @@ class Tavern extends Location
 		
 		return Math.max(0, how_much);
 	}
+}
+
+class Mountains extends Location
+{
+	public Mountains()
+	{
+		// TODO Auto-generated constructor stub
+	}
+	
+	
 }
 
 class torch extends consumable_item
@@ -483,6 +570,22 @@ class torch extends consumable_item
 				}
 			}
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new burn();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
+	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item = new torch(new_owner);
+		this.cheaty_copy_item(new_item, how_many, new_owner);
+		return new_item;
 	}
 }
 
@@ -512,6 +615,22 @@ class wine extends consumable_item
 		{
 			helpers.get_PC().add_drunkeness(5);
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new get_drunk();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
+	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item = new wine(new_owner);
+		this.cheaty_copy_item(new_item, how_many, new_owner);
+		return new_item;
 	}
 }
 
@@ -521,6 +640,7 @@ class steal_wine extends Action implements NPC_Action
 	{
 		super(who_does);
 		description = " does nothing suspicious";
+		time_to_completion = 10;
 	}
 	
 	@Override
@@ -538,6 +658,14 @@ class steal_wine extends Action implements NPC_Action
 	public int how_likely()
 	{
 		return 10;
+	}
+
+	@Override
+	public Action copy_Action(Person to_whom)
+	{
+		Action new_action = new steal_wine(to_whom);
+		new_action.cheaty_copy_action(this, to_whom);
+		return new_action;
 	}
 }
 

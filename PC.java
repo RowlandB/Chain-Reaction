@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
 ///////////////////////////////
 class Player_Character extends Person
 {
@@ -56,20 +55,24 @@ class Player_Character extends Person
 		
 		this.time_passes();
 		
-		ArrayList<Action> potential_actions = Get_Viable_Actions();
-		
-		//helpers.output("");
-		helpers.output("Time: " + String.valueOf(helpers.Get_Time()));
-		helpers.output("What would you like to do?");
-		for(int x=0; x<potential_actions.size(); x++)
+		if(ticks_until_next_action <= 0)
 		{
-			helpers.output_partial_list(x+1, potential_actions.get(x).Get_Description());
+			ArrayList<Action> potential_actions = Get_Viable_Actions();
+			
+			//helpers.output("");
+			helpers.output("Time: " + String.valueOf(helpers.Get_Time()));
+			helpers.output("What would you like to do?");
+			for(int x=0; x<potential_actions.size(); x++)
+			{
+				helpers.output_partial_list(x+1, potential_actions.get(x).Get_Description());
+			}
+			helpers.finish_output();
+	
+			int which = helpers.which_one(potential_actions.size());
+			
+			potential_actions.get(which).What_Happens();
+			ticks_until_next_action = potential_actions.get(which).get_time_to_completion();
 		}
-		helpers.finish_output();
-
-		int which = helpers.which_one(potential_actions.size());
-		
-		potential_actions.get(which).What_Happens();
 	}
 	
 	
@@ -91,7 +94,7 @@ class Player_Character extends Person
 		{
 			if(possible_action.can_be_done())
 			{
-				potentials.add(possible_action);
+				potentials.add(possible_action.copy_Action(Player_Character.this));
 			}
 		}
 		
@@ -130,6 +133,14 @@ class Player_Character extends Person
 				everyone.get(whom).alter_liking(by_whom, -1000);
 			}
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Insult();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	
@@ -144,16 +155,17 @@ class Player_Character extends Person
 		public void What_Happens()
 		{
 			helpers.output("Where?");
+			Location here = Player_Character.this.getCurrent_location();
 			
 			int y=1;
 			ArrayList<Location> potential_places = new ArrayList<Location>();
 			for(Location places: helpers.Location_List.values())
 			{
-				
 				if(places.can_individual_visit(location_knowledge.get_score(places.Where())))
 				{
+					int distance = places.distance(here);
 					potential_places.add(places);
-					helpers.output_partial_list(y, places.Where());
+					helpers.output_partial_list(y, (places.Where() + "    " + distance));
 					y++;
 				}
 			}
@@ -161,8 +173,16 @@ class Player_Character extends Person
 			
 			int answer = helpers.which_one(potential_places.size());
 			
-			Move_Character(potential_places.get(answer));
-			
+			this.time_to_completion = potential_places.get(answer).distance(here);
+			Move_Character(potential_places.get(answer));			
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Move();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 	
@@ -172,6 +192,7 @@ class Player_Character extends Person
 		{
 			super(Player_Character.this);
 			description = "Talk to someone near you";
+			time_to_completion = 10;
 		}
 		
 		public void What_Happens()
@@ -197,6 +218,14 @@ class Player_Character extends Person
 				everyone.get(whom).Chat_with_PC();
 			}
 		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Chat();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	class DoNothing extends Action
@@ -209,6 +238,14 @@ class Player_Character extends Person
 		
 		public void What_Happens()
 		{}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new DoNothing();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
 	}
 	
 	class ExamineInventory extends Action
@@ -235,7 +272,8 @@ class Player_Character extends Person
 
 				if(answer == 1)
 				{
-					character_inventory.Display_Inventory();					
+					character_inventory.Display_Inventory();
+					time_to_completion = 5;
 				}
 				else if(answer == 2)
 				{
@@ -246,7 +284,7 @@ class Player_Character extends Person
 						item useable_item = character_inventory.Select_Item();
 						
 						useable_item.get_abiltiy().What_Happens();
-						
+						time_to_completion = useable_item.get_abiltiy().get_time_to_completion();
 					}
 					else
 					{
@@ -256,9 +294,18 @@ class Player_Character extends Person
 				else if(answer == 3)
 				{
 					character_inventory.Equip_Item();
+					time_to_completion = 10;
 				}
 			}
 			
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new ExamineInventory();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 		
 	}
@@ -274,6 +321,14 @@ class Player_Character extends Person
 		public void What_Happens()
 		{
 			my_knowledge.display_all_facts();
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Ruminate();
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
 		}
 	}
 	
@@ -311,6 +366,7 @@ class Player_Character extends Person
 		{
 			drunk--;
 		}
+		ticks_until_next_action--;
 	}
 	
 	////////////////

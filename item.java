@@ -17,14 +17,13 @@ abstract class consumable_item extends item
 		
 		final public void What_Happens()
 		{
-			by_whom.decrease_item(the_item.get_name());
+			String item_name = consumable_item.this.get_name();
+			by_whom.decrease_item(item_name);
 			Other_Happenings();
 		}
 		
 		abstract protected void Other_Happenings();
 	}
-	
-	private item the_item=this;
 }
 
 
@@ -36,10 +35,6 @@ abstract class equippable_item extends item
 		equipped = false;
 		slot = where;
 	}
-	
-	@Override
-	abstract public item copy_item(int how_many, Person new_owner);
-	
 	
 	public void Display()
 	{
@@ -81,26 +76,36 @@ class gold extends item
 		quantity = how_much;
 		flammable = true;
 	}
+
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item = new gold(new_owner, how_many);
+		this.cheaty_copy_item(new_item, how_many, new_owner);
+		return new_item;
+	}
 }
 
 //don't make this abstract. You can have random 'stuff' items
-class item
+abstract class item
 {
-	public item copy_item(int how_many, Person new_owner)
-	{
-		item new_item = new item(new_owner);
-		new_item.name = this.name;
-		new_item.rules_description = this.rules_description;
-		new_item.flavor_text = this.flavor_text;
-		new_item.weight = this.weight;
-		new_item.value = this.value;
-		new_item.stolen = this.stolen;
-		new_item.ability = this.ability;
-		new_item.slot = this.slot;
-		new_item.quantity = how_many;
-		
-		return new_item;
-	}
+	abstract public item copy_item(int how_many, Person new_owner);
+//	{
+//		item new_item = new item(new_owner);
+//		new_item.name = this.name;
+//		new_item.rules_description = this.rules_description;
+//		new_item.flavor_text = this.flavor_text;
+//		new_item.weight = this.weight;
+//		new_item.value = this.value;
+//		new_item.stolen = this.stolen;
+//		new_item.ability = this.ability;
+//		new_item.slot = this.slot;
+//		new_item.quantity = how_many;
+//
+//		this.cheaty_copy_item(new_item, how_many, new_owner);
+//		
+//		return new_item;
+//	}
 	
 	protected void cheaty_copy_item(item new_item, int how_many, Person new_owner)
 	{
@@ -110,9 +115,9 @@ class item
 		new_item.weight = this.weight;
 		new_item.value = this.value;
 		new_item.stolen = this.stolen;
-		new_item.ability = this.ability;
+		new_item.ability = this.ability.copy_Action(new_owner);
 		new_item.slot = this.slot;
-		new_item.quantity = how_many;
+		new_item.owner = new_owner;
 	}
 	
 	item(Person new_owner)
@@ -212,6 +217,14 @@ class item
 			helpers.output("surprisingly, nothing happens");
 			helpers.finish_output();
 		}
+		
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action blarg = new Nothing(to_whom);
+			blarg.cheaty_copy_action(this, to_whom);
+			return blarg;
+		}
 	}
 	
 	protected String name;
@@ -290,9 +303,26 @@ class readable_item extends item
 			read = true;
 		}
 
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_read = new Read(by_whom);
+			new_read.cheaty_copy_action(this, to_whom);
+			return new_read;
+		}
+
 	}
 	
+	@Override
+	public item copy_item(int how_many, Person new_owner)
+	{
+		item new_item = new readable_item(this.get_name(), this.flavor_text, new_owner);
+		this.cheaty_copy_item(new_item, how_many, new_owner);
+		return new_item;
+	}
 	
 	private String text;
 	private boolean read;
+	
+
 }
