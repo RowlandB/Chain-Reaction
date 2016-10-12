@@ -149,6 +149,8 @@ class Fields extends Location
 		thing_that_grows = grow_thing;
 		time_it_takes = how_quickly;
 		time_till_done = how_quickly;
+		rejuvination_time = 600;
+		remaining_rejuvination = 0;
 		
 		options.put("Grow", new Grow_Things(null));
 	}
@@ -157,6 +159,8 @@ class Fields extends Location
 	public boolean burn_location()
 	{
 		unattended_stuff.remove(thing_that_grows.get_name());
+		options.remove("Grow");
+		options.put("Grow", new Grow_Nothing(null));
 		return super.burn_location();
 	}
 	
@@ -164,10 +168,26 @@ class Fields extends Location
 	public void time_passes()
 	{
 		super.time_passes();
-		if(!burning)
+		if(burnt)
+		{
+			rejuvinate();
+		}
+		else if(!burning)
 		{
 			grow();
 		}	
+	}
+	
+	private void rejuvinate()
+	{
+		remaining_rejuvination++;
+		if(remaining_rejuvination >= rejuvination_time)
+		{
+			burnt =  false;
+			options.remove("Grow");
+			options.put("Grow", new Grow_Things(null));
+			remaining_rejuvination = 0;
+		}
 	}
 	
 	class Grow_Things extends Work
@@ -175,7 +195,7 @@ class Fields extends Location
 		public Grow_Things(Person who_does)
 		{
 			super(who_does);
-			description = "grow " + thing_that_grows.get_name();
+			description = "try to grow " + thing_that_grows.get_name();
 		}
 
 		@Override
@@ -188,6 +208,29 @@ class Fields extends Location
 		public Action copy_Action(Person to_whom)
 		{
 			Action new_action = new Grow_Things(to_whom);
+			new_action.cheaty_copy_action(this, to_whom);
+			return new_action;
+		}
+	}
+	
+	class Grow_Nothing extends Action
+	{
+		public Grow_Nothing(Person who_does)
+		{
+			super(who_does);
+			description = "try to grow " + thing_that_grows.get_name();
+		}
+
+		@Override
+		public void What_Happens()
+		{
+			//nothing happens because it's all burnt
+		}
+
+		@Override
+		public Action copy_Action(Person to_whom)
+		{
+			Action new_action = new Grow_Nothing(to_whom);
 			new_action.cheaty_copy_action(this, to_whom);
 			return new_action;
 		}
@@ -208,6 +251,8 @@ class Fields extends Location
 	protected int time_till_done;
 	protected int time_it_takes;
 	protected item thing_that_grows;
+	protected int rejuvination_time;
+	protected int remaining_rejuvination;
 }
 
 ///////////////////////////////
@@ -367,6 +412,8 @@ class My_Game_Initializer extends Game_Initializer
 			Location Bobs_Hovel = new Hovel("Bob's Hovel", 40, 36);
 			Location Tavern = new Tavern("The Tavern", 32, 32);
 			Location The_Oakenshields = new Hovel("The Oakenshields'", 36, 36);
+			Location Mountains = new Mountains("The Mountains", 100, 100);
+			
 			places.put("Blacksmith's", Blacksmith);
 			places.put("Bob's Field", Bobs_Fields);
 			places.put("Keshie's Castle", Keshies_Castle);
@@ -374,6 +421,7 @@ class My_Game_Initializer extends Game_Initializer
 			places.put("Bob's Hovel", Bobs_Hovel);
 			places.put("The Tavern", Tavern);
 			places.put("The Oakenshields", The_Oakenshields);
+			places.put("The Mountains", Mountains);
 			
 			
 			////Persons
@@ -385,7 +433,7 @@ class My_Game_Initializer extends Game_Initializer
 			NPCs.put("Bob", Bob);
 			
 			NPC Generic_Noble = new Noble(Keshies_Castle, "High Lord Kesh of No-Funnington");
-			Generic_Noble.add_fact(new boring_fact("goblins","There are goblins in the mountains. It's as good a plot hook as any."));
+			Generic_Noble.add_fact(new Mountain_Fact());
 			Generic_Noble.add_fact(new Dungeon_Fact());
 			Generic_Noble.set_personal_greeting("greetings, peasant");
 			Keshies_Castle.AddPerson(Generic_Noble);
@@ -512,12 +560,27 @@ class Tavern extends Location
 
 class Mountains extends Location
 {
-	public Mountains()
+	public Mountains(String name, int x, int y)
 	{
+		super(name, x, y);
 		// TODO Auto-generated constructor stub
+		accessibility = 20;
 	}
 	
 	
+}
+
+class Mountain_Fact extends Fact
+{
+	Mountain_Fact()
+	{
+		super("goblins","There are goblins in the mountains. It's as good a plot hook as any.");
+	}
+	
+	public void on_learn(Person learner)
+	{
+		learner.learn_about_location("The Mountains", 25);
+	}
 }
 
 class torch extends consumable_item
@@ -542,6 +605,12 @@ class torch extends consumable_item
 			description = "burn things";
 		}
 		
+		public burn(Person to_whom)
+		{
+			super(to_whom);
+			description = "burn things";
+		}
+
 		protected void Other_Happenings()
 		{
 			helpers.output("Which?");
@@ -553,7 +622,7 @@ class torch extends consumable_item
 			
 			if(which==1)
 			{
-				Location here = owner.getCurrent_location();
+				Location here = by_whom.getCurrent_location();
 				
 				if(!here.burn_location())
 				{
@@ -574,7 +643,7 @@ class torch extends consumable_item
 		@Override
 		public Action copy_Action(Person to_whom)
 		{
-			Action new_action = new burn();
+			Action new_action = new burn(to_whom);
 			new_action.cheaty_copy_action(this, to_whom);
 			return new_action;
 		}
@@ -676,6 +745,8 @@ class Destromath_the_Desolator extends equippable_item
 		super(equip_region.two_handed);
 		name = "Destromath the Desolator";
 		flavor_text = "An Icy Blade that steals the souls of those it kills";
+		value = 1000;
+		weight = 20;
 	}
 	
 	@Override

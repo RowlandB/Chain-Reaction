@@ -146,7 +146,6 @@ class Commoner extends NPC
 	@Override
 	protected support make_new_support()
 	{
-		// TODO Auto-generated method stub
 		return (new gives_valuables());
 	}
 	
@@ -160,7 +159,6 @@ class Commoner extends NPC
 		@Override
 		public void What_Happens()
 		{
-			// TODO Auto-generated method stub
 			item gift = get_best_item();
 			Give(target, gift.get_name(), gift.get_count());
 		}
@@ -254,8 +252,8 @@ class Commoner extends NPC
 				helpers.output(name + " goes home");				
 			}
 			
-			MoveTo(Get_Home());
 			time_to_completion = home.distance(getCurrent_location());
+			Move_From(Get_Home(), time_to_completion);
 		}
 		
 		public int how_likely()
@@ -300,8 +298,8 @@ class Commoner extends NPC
 				helpers.output(name + " goes to work");			
 			}
 			
-			MoveTo(work);
 			time_to_completion = work.distance(getCurrent_location());
+			Move_From(work, time_to_completion);
 		}
 		
 		public int how_likely()
@@ -509,20 +507,24 @@ abstract class  NPC extends Person
 	{
 		if(ticks_until_next_action <= 0)
 		{
+			if(getCurrent_location()==helpers.nowhere)
+			{
+				helpers.nowhere.finish_moving(this);
+			}
+			
 			//'decide' on an action
-				//for now, always do nothing
 			NPC_Action the_action = find_best_action();
 	
-			//do the action
-			the_action.What_Happens();
-			ticks_until_next_action = the_action.get_time_to_completion();
-			
 			//check if the player is in the same location
 				//notify player
 			if(helpers.get_PC().getCurrent_location().Where() == this.current_location.Where())
 			{
 				helpers.output(name + " " + the_action.Get_Description());
 			}
+
+			//do the action
+			the_action.What_Happens();
+			ticks_until_next_action = ticks_until_next_action + the_action.get_time_to_completion();		
 		}
 	}
 	
@@ -571,8 +573,6 @@ abstract class  NPC extends Person
 	
 	public void add_action(NPC_Action A)
 	{
-		//TODO add a copy action function so that we can copy the action, then place it
-		//otherwise, when one NPC does something, the world might be modified as if someone else did it
 		NPC_Action arg = (NPC_Action) A.copy_Action(NPC.this);
 		potential_actions.put(arg.Get_Description(), arg);
 	}
@@ -645,11 +645,17 @@ abstract class  NPC extends Person
 	
 	//Terminating Simple Action
 	//Moves the character to a new location
-	public void MoveTo(Location new_place)
+	public void Move_To(Location new_place)
 	{
-		current_location.RemovePerson(this);
 		current_location = new_place;
 		new_place.AddPerson(this);
+	}
+	
+	@Override
+	protected void Move_From(Location where_to, Integer how_far)
+	{
+		current_location.RemovePerson(this);
+		super.Move_From(where_to, how_far);
 	}
 	
 	public void time_passes()
@@ -713,7 +719,9 @@ abstract class  NPC extends Person
 		{
 			helpers.output(name + " leaves in search of " + target.get_name());				
 		}
-		MoveTo(new_location);
+		
+		ticks_until_next_action = new_location.distance(getCurrent_location());
+		Move_From(new_location, ticks_until_next_action);
 	}
 
 	private void Chat_Greeting()
@@ -877,6 +885,7 @@ abstract class  NPC extends Person
 		{
 			super(NPC.this);
 			description =  "does nothing";
+			time_to_completion = 15;
 		}
 		
 		public void What_Happens()
@@ -922,8 +931,9 @@ abstract class  NPC extends Person
 			{
 				helpers.output(name + " runs away");				
 			}
-			MoveTo(new_location);
+			
 			time_to_completion = new_location.distance(getCurrent_location());
+			Move_From(new_location, time_to_completion);
 		}
 		
 		@Override

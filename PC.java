@@ -14,7 +14,7 @@ class Player_Character extends Person
 //		character_inventory.add_item(new lazy_equip(equip_region.one_handed));
 //		character_inventory.add_item(new lazy_equip(equip_region.one_handed));
 //		character_inventory.add_item(new lazy_equip(equip_region.two_handed));
-		character_inventory.add_item(new Destromath_the_Desolator());
+//		character_inventory.add_item(new Destromath_the_Desolator());
 		character_inventory.add_item(new torch(Player_Character.this));
 		wine starting_wine = new wine(Player_Character.this);
 		starting_wine.set_count(10);
@@ -52,15 +52,17 @@ class Player_Character extends Person
 	//displays at all the actions the player can do
 	public void InteractWithEnvironment()
 	{
-		
-		this.time_passes();
-		
 		if(ticks_until_next_action <= 0)
 		{
+			if(getCurrent_location()==helpers.nowhere)
+			{
+				helpers.nowhere.finish_moving(this);
+			}
+			
 			ArrayList<Action> potential_actions = Get_Viable_Actions();
 			
 			//helpers.output("");
-			helpers.output("Time: " + String.valueOf(helpers.Get_Time()));
+			helpers.output("Time: " + String.valueOf(helpers.Get_Time()/60) + ":" + String.valueOf(helpers.Get_Time()%60));
 			helpers.output("What would you like to do?");
 			for(int x=0; x<potential_actions.size(); x++)
 			{
@@ -74,7 +76,6 @@ class Player_Character extends Person
 			ticks_until_next_action = potential_actions.get(which).get_time_to_completion();
 		}
 	}
-	
 	
 	private ArrayList<Action> Get_Viable_Actions()
 	{
@@ -174,7 +175,7 @@ class Player_Character extends Person
 			int answer = helpers.which_one(potential_places.size());
 			
 			this.time_to_completion = potential_places.get(answer).distance(here);
-			Move_Character(potential_places.get(answer));			
+			Move_From(potential_places.get(answer), time_to_completion);
 		}
 
 		@Override
@@ -353,11 +354,6 @@ class Player_Character extends Person
 	public boolean Player_is_Weak()
 	{
 		return (current_hp < total_hp/2);
-	}
-	
-	private void Move_Character(Location where_to)
-	{
-		current_location = where_to;
 	}
 	
 	protected void time_passes()

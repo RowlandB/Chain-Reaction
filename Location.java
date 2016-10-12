@@ -13,6 +13,7 @@ abstract class Location
 		unattended_stuff = new HashMap<String, item>();
 		x_coordinate = 0;
 		y_coordinate = 0;
+		burnt = false;
 	}
 	
 	public Location(String name, int x, int y)
@@ -36,27 +37,32 @@ abstract class Location
 	{
 		if(this.burning)
 		{
-			if(helpers.random(0, 100) < this.get_flammability())
+			burn();
+		}
+	}
+	
+	protected void burn()
+	{
+		if(helpers.random(0, 100) < this.get_flammability())
+		{
+			//building has burnt
+			helpers.output(this.Where() + " has burnt to the ground");
+			this.Loc_name = "The Burnt Remains of " + this.Loc_name;
+			burning = false;
+			burnt = true;
+		}
+		else
+		{
+			
+			for(NPC guys : who_is_here.values())
 			{
-				//building has burnt
-				helpers.output(this.Where() + " has burnt to the ground");
-				this.Loc_name = "The Burnt Remains of " + this.Loc_name;
-				burning = false;
+				guys.injure(5);
 			}
-			else
+			
+			if(helpers.get_PC().getCurrent_location().equals(this))
 			{
-				//helpers.get_PC().injure(5);
-				for(NPC guys : who_is_here.values())
-				{
-					guys.injure(5);
-				}
-				
-				if(helpers.get_PC().getCurrent_location().equals(this))
-				{
-					helpers.output(this.Where() + " is burning!");			
-				}
-				
-				
+				helpers.output(this.Where() + " is burning!");
+				helpers.get_PC().injure(5);
 			}
 		}
 	}
@@ -259,6 +265,8 @@ abstract class Location
 	protected HashMap<String, item> unattended_stuff;
 	protected int flammability; //percent chance to be done burning
 	protected boolean burning;
+	protected boolean burnt;
+
 	
 	protected int x_coordinate;
 	protected int y_coordinate;

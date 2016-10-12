@@ -134,6 +134,17 @@ public abstract class Person
 		}
 	}
 	
+	protected void Move_From(Location where_to, Integer how_far)
+	{
+		current_location = helpers.nowhere;
+		helpers.nowhere.add_Character(this, where_to, how_far);
+	}
+	
+	protected void Move_To(Location where_to)
+	{
+		current_location = where_to;
+	}
+	
 	abstract public void injure(int x);
 	abstract protected void die();
 	abstract int get_attack_power();
@@ -487,7 +498,7 @@ public abstract class Person
 		public item get_random_item()
 		{
 			// TODO Auto-generated method stub
-			int which = helpers.random(0, the_items.size());
+			int which = helpers.random(0, the_items.size()-1);
 			return the_items.get(which);
 		}
 		

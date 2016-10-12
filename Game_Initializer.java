@@ -1,4 +1,9 @@
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.HashMap;
 
@@ -59,13 +64,15 @@ class helpers
 	
 	helpers(Player_Character hero, HashMap<String, Location> places, HashMap<String, NPC> NPCs)
 	{
-		time_of_day=12;
+		time_of_day=0;
 		PC = hero;
 		IO = new System_IO_Object();
 		
 		//IO = new Frame_Button_IO_Object();
 		NPC_List = NPCs;
 		Location_List = places;
+		
+		nowhere = new No_Where();
 	}
 	
 	public static int Get_Time()
@@ -91,6 +98,8 @@ class helpers
 			an_NPC.time_passes();
 		}
 		increment_time();
+		
+		//nowhere.time_passes();
 	}
 	
 	static void finish_output()
@@ -177,19 +186,19 @@ class helpers
 	//24 hour clock in 5 minute increments
 	private static void increment_time()
 	{
-		time_of_day = time_of_day + 5;
+		time_of_day = time_of_day + 1;
 		if(time_of_day>=120)
 		{
 			time_of_day=time_of_day-120;
 		}
 	}
-		
-		private static int time_of_day;
-		static Player_Character PC;
-		static IO_Object IO;
-		static HashMap<String, Location> Location_List;
-		static HashMap<String, NPC> NPC_List;
-		
+
+	protected static No_Where nowhere;
+	private static int time_of_day;
+	static Player_Character PC;
+	static IO_Object IO;
+	static HashMap<String, Location> Location_List;
+	static HashMap<String, NPC> NPC_List;		
 		
 }
 
@@ -202,4 +211,62 @@ class Start_Location extends Location
 	}
 }
 
+class No_Where extends Location
+{
+	public No_Where()
+	{
+		x_coordinate = 0;
+		y_coordinate = 0;
+		
+		people_moving = new HashMap<>();
+	}
 	
+	protected void add_Character(Person new_guy, Location L, Integer I)
+	{
+		//System.out.println("adding: " + new_guy.get_name());
+		people_moving.put(new_guy, new move_place(L, I/2));
+	}
+	
+/*	@Override
+	public void time_passes()
+	{
+		//super.time_passes();
+		
+		for(Iterator<Person> iterator = ((Collection<Person>) people_moving.keySet()).iterator(); iterator.hasNext(); )
+		{
+			Person mover = iterator.next();
+			
+			people_moving.get(mover).move_closer();
+			if(people_moving.get(mover).how_far<=0)
+			{
+				mover.Move_To(people_moving.get(mover).to_where);
+				iterator.remove();
+			}
+		}
+	}
+*/	
+	class move_place
+	{
+		public move_place(Location L, Integer i)
+		{
+			to_where = L;
+			how_far = i;
+		}
+		
+		protected void move_closer()
+		{
+			how_far = how_far - 1;
+		}
+
+		Location to_where;
+		Integer how_far;
+	}
+	
+	private HashMap<Person, move_place> people_moving;
+
+	public void finish_moving(Person mover)
+	{
+		mover.Move_To(people_moving.get(mover).to_where);
+	}
+}
+
